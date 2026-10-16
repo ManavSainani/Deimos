@@ -140,6 +140,24 @@ The platform will aim to support:
 
 ## Development Workflow
 
+### Run locally
+
+Prerequisites: Node.js 20.19+ or 22.12+ and npm.
+
+```sh
+npm install
+npm run dev
+```
+
+Open the local URL printed by Vite (normally `http://localhost:8443`). Stop the server with `Ctrl+C`. The development server uses port 8443 by default; set `PORT` to use a different port.
+
+To create and serve a production build:
+
+```sh
+npm run build
+npm run preview
+```
+
 The team will use GitHub for version control, collaboration, and project management.
 
 Our proposed workflow includes:

@@ -6,7 +6,7 @@ import { existsSync, readFileSync } from 'node:fs'
 
 // Figma Make supplies this file in its hosted environment. Keep the app
 // runnable from a regular checkout where the generated settings are absent.
-const siteConfigurationPath = path.resolve(__dirname, '.figma/make/site.json')
+const siteConfigurationPath = path.resolve(import.meta.dirname, '.figma/make/site.json')
 const siteConfiguration: FigmaSiteConfiguration = existsSync(siteConfigurationPath)
   ? JSON.parse(readFileSync(siteConfigurationPath, 'utf8'))
   : {}
@@ -33,7 +33,7 @@ react(),
     ],
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, './src'),
+        '@': path.resolve(import.meta.dirname, './src'),
       },
     },
     server: {
