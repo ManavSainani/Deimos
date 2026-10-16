@@ -209,6 +209,13 @@ function Icon({
       </>
     ),
     close: <path d="M6 6l12 12M18 6 6 18" />,
+    logout: (
+      <>
+        <path d="M10 17l5-5-5-5" />
+        <path d="M15 12H3" />
+        <path d="M12 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6" />
+      </>
+    ),
   }
 
   return (
@@ -267,14 +274,14 @@ function Header({
   role,
   view,
   onView,
-  onRole,
   onSubmit,
+  onSignOut,
 }: {
   role: Role
   view: View
   onView: (view: View) => void
-  onRole: (role: Role) => void
   onSubmit: () => void
+  onSignOut: () => void
 }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const person = role === "student" ? "Sample Student" : "Dr. Elena Ruiz"
@@ -356,19 +363,15 @@ function Header({
                 >
                   <Icon name="user" /> View profile
                 </button>
-                <div className="my-2 border-t border-[#e0ded7]" />
-                <p className="px-3 pb-2 pt-1 text-[11px] font-bold uppercase tracking-wider text-[#777873]">
-                  Preview dashboard
-                </p>
                 <button
                   onClick={() => {
-                    onRole(role === "student" ? "faculty" : "student")
                     setMenuOpen(false)
+                    onSignOut()
                   }}
                   className="flex w-full cursor-pointer items-center gap-3 rounded px-3 py-3 text-left text-sm hover:bg-[#f2efe8]"
                 >
-                  <Icon name="refresh" />
-                  Switch to {role === "student" ? "faculty" : "student"}
+                  <Icon name="logout" />
+                  Sign out
                 </button>
               </div>
             )}
@@ -1494,8 +1497,14 @@ export default function App() {
         role={role}
         view={view}
         onView={setView}
-        onRole={changeRole}
         onSubmit={() => setSubmitOpen(true)}
+        onSignOut={() => {
+          setAuthenticated(false)
+          setRole("student")
+          setView("projects")
+          setSubmitOpen(false)
+          setSelectedProject(null)
+        }}
       />
       {view === "projects" && (
         <ProjectsView
