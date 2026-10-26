@@ -40,6 +40,8 @@ type Project = {
   tags: string[]
   access: string
   repositoryUrl?: string | null
+  cardImageUrl?: string | null
+  additionalMedia?: { url: string; type: "image" | "video" }[]
 }
 
 type ReviewItem = {
@@ -63,6 +65,8 @@ function toProject(row: ArchiveProjectRow): Project {
     tags: row.technologies,
     access: row.repository_access,
     repositoryUrl: row.repository_url,
+    cardImageUrl: row.card_image_url,
+    additionalMedia: row.additional_media ?? [],
   }
 }
 
@@ -497,7 +501,15 @@ function ProjectCard({
     "Hardware / Embedded Systems": "bg-[#ece9f1]",
   }
   return (
-    <article className="flex min-h-72 flex-col rounded-lg border border-[#d9d7d0] bg-[#fffefa] p-6 shadow-[0_3px_12px_rgba(24,26,24,0.04)] transition hover:-translate-y-0.5 hover:shadow-lg">
+    <article className="flex min-h-72 flex-col overflow-hidden rounded-lg border border-[#d9d7d0] bg-[#fffefa] shadow-[0_3px_12px_rgba(24,26,24,0.04)] transition hover:-translate-y-0.5 hover:shadow-lg">
+      {project.cardImageUrl && (
+        <img
+          src={project.cardImageUrl}
+          alt={`${project.title} cover`}
+          className="h-48 w-full object-cover"
+        />
+      )}
+      <div className="flex flex-1 flex-col p-6">
       <div className="flex items-start justify-between gap-4">
         <div className="flex flex-wrap items-center gap-2">
           <span
@@ -542,6 +554,7 @@ function ProjectCard({
             {project.access}
           </span>
         </div>
+      </div>
       </div>
     </article>
   )
@@ -1307,6 +1320,42 @@ function SubmitModal({
     setError("")
     const formData = new FormData(event.currentTarget)
     const [term, year] = String(formData.get("termYear")).split(" ")
+    const cardImage = formData.get("cardImage")
+    const additionalMedia = formData.getAll("additionalMedia")
+    const selectedCardImage = cardImage instanceof File && cardImage.size > 0 ? cardImage : null
+    const selectedAdditionalMedia = additionalMedia.filter(
+      (file): file is File => file instanceof File && file.size > 0,
+    )
+    if (selectedCardImage && !selectedCardImage.type.startsWith("image/")) {
+      setError("The display card file must be an image.")
+      setSaving(false)
+      return
+    }
+    if (selectedCardImage && selectedCardImage.size > 10 * 1024 * 1024) {
+      setError("The display card image must be 10 MB or smaller.")
+      setSaving(false)
+      return
+    }
+    const invalidMedia = selectedAdditionalMedia.find(
+      (file) =>
+        !file.type.startsWith("image/") && !file.type.startsWith("video/"),
+    )
+    if (invalidMedia) {
+      setError("Additional media can only include photos and videos.")
+      setSaving(false)
+      return
+    }
+    if (
+      selectedAdditionalMedia.some(
+        (file) =>
+          file.size >
+          (file.type.startsWith("video/") ? 50 : 10) * 1024 * 1024,
+      )
+    ) {
+      setError("Additional photos must be 10 MB or smaller; videos 50 MB or smaller.")
+      setSaving(false)
+      return
+    }
     try {
       await onSubmit({
         title: String(formData.get("title")),
@@ -1319,6 +1368,8 @@ function SubmitModal({
           .map((name) => name.trim())
           .filter(Boolean),
         repositoryUrl: String(formData.get("repositoryUrl") || "") || null,
+        cardImage: selectedCardImage,
+        additionalMedia: selectedAdditionalMedia,
       })
       setSent(true)
     } catch (submitError) {
@@ -1413,6 +1464,35 @@ function SubmitModal({
               defaultValue=""
               name="repositoryUrl"
             />
+            <label className="sm:col-span-2">
+              <span className="mb-1 block text-sm font-medium">
+                Display card image
+              </span>
+              <span className="mb-2 block text-xs text-[#71726e]">
+                The main image shown on the project card. JPG, PNG, WebP, or GIF; up to 10 MB.
+              </span>
+              <input
+                name="cardImage"
+                type="file"
+                accept="image/*"
+                className="block w-full rounded border border-[#d6d4ce] bg-white p-3 text-sm file:mr-3 file:rounded file:border-0 file:bg-[#f2efe8] file:px-3 file:py-2"
+              />
+            </label>
+            <label className="sm:col-span-2">
+              <span className="mb-1 block text-sm font-medium">
+                Additional project media
+              </span>
+              <span className="mb-2 block text-xs text-[#71726e]">
+                Add photos and videos that viewers can see when they open project details. Photos up to 10 MB; videos up to 50 MB each.
+              </span>
+              <input
+                name="additionalMedia"
+                type="file"
+                accept="image/*,video/*"
+                multiple
+                className="block w-full rounded border border-[#d6d4ce] bg-white p-3 text-sm file:mr-3 file:rounded file:border-0 file:bg-[#f2efe8] file:px-3 file:py-2"
+              />
+            </label>
           </div>
           {error && (
             <p className="mt-5 rounded bg-[#fbefef] p-3 text-sm text-[#8f252d]">
@@ -1492,6 +1572,34 @@ function ProjectModal({
             <p className="mt-6 text-base leading-7 text-[#656762]">
               {project.description}
             </p>
+            {(project.cardImageUrl || project.additionalMedia?.length) && (
+              <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                {project.cardImageUrl && (
+                  <img
+                    src={project.cardImageUrl}
+                    alt={`${project.title} display`}
+                    className="max-h-80 w-full rounded-lg object-cover sm:col-span-2"
+                  />
+                )}
+                {project.additionalMedia?.map((media) =>
+                  media.type === "video" ? (
+                    <video
+                      key={media.url}
+                      src={media.url}
+                      controls
+                      className="max-h-80 w-full rounded-lg bg-black object-contain"
+                    />
+                  ) : (
+                    <img
+                      key={media.url}
+                      src={media.url}
+                      alt={`${project.title} project media`}
+                      className="max-h-80 w-full rounded-lg object-cover"
+                    />
+                  ),
+                )}
+              </div>
+            )}
             <div className="mt-7 grid gap-6 border-y border-[#dfddd6] py-6 sm:grid-cols-2">
               <div>
                 <span className="text-xs font-bold uppercase tracking-wide text-[#777873]">

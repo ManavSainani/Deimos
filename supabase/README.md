@@ -11,16 +11,18 @@ grant themselves the faculty role during signup.
 1. Create a Supabase project at [supabase.com/dashboard](https://supabase.com/dashboard).
 2. In the project, open **SQL Editor**, create a query, paste the contents of
    `migrations/202610260001_initial_schema.sql`, and run it.
-3. In **Project Settings → API**, copy the Project URL and the publishable key.
+3. Create another SQL Editor query, paste `migrations/202610260002_project_media.sql`,
+   and run it to add private media storage and its access policies.
+4. In **Project Settings → API**, copy the Project URL and the publishable key.
    The publishable key is intended for a browser app; never use a `service_role`
    or secret key in this project.
-4. Copy `.env.example` to `.env.local` and set `VITE_SUPABASE_URL` and
+5. Copy `.env.example` to `.env.local` and set `VITE_SUPABASE_URL` and
    `VITE_SUPABASE_PUBLISHABLE_KEY`. Restart Vite after changing environment
    variables.
-5. In Supabase **Authentication → URL Configuration**, set the Site URL to the
+6. In Supabase **Authentication → URL Configuration**, set the Site URL to the
    deployed Pages URL and add the local development URL (normally
    `http://localhost:8443`) to the allowed redirect URLs.
-6. In Cloudflare Pages, add the same two `VITE_` variables under the project’s
+7. In Cloudflare Pages, add the same two `VITE_` variables under the project’s
    **Settings → Variables and Secrets** for production (and preview, if used),
    then redeploy. Vite embeds these values at build time.
 
@@ -52,6 +54,9 @@ themselves elevated access.
 
 - Guests and signed-in users can read approved project records.
 - Students can submit projects and see their own submission statuses.
+- Student submissions can include a card image and additional photos/videos.
+- Project media is stored privately and becomes viewable through signed URLs
+  only for approved projects or by the submitting student.
 - Faculty accounts can see the review queue and approve submissions or request
   changes.
 - The sample-data profile editor and archive-record management UI are still
