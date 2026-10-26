@@ -1,7 +1,11 @@
 import { FormEvent, ReactNode, useMemo, useState } from "react"
 
-type Role = "student" | "faculty"
+type Role = "student" | "faculty" | "guest"
 type View = "projects" | "submissions" | "review" | "archive" | "profile"
+interface NavigationLink {
+  label: string
+  value: View
+}
 type SubmissionStatus = "In review" | "Changes requested" | "Approved"
 
 type Project = {
@@ -284,19 +288,29 @@ function Header({
   onSignOut: () => void
 }) {
   const [menuOpen, setMenuOpen] = useState(false)
-  const person = role === "student" ? "Sample Student" : "Dr. Elena Ruiz"
-  const links: { label: string; value: View }[] =
+  const person =
+    role === "student"
+      ? "Sample Student"
+      : role === "faculty"
+        ? "Dr. Elena Ruiz"
+        : "Guest visitor"
+  const links: NavigationLink[] =
     role === "student"
       ? [
           { label: "Projects", value: "projects" },
           { label: "My submissions", value: "submissions" },
           { label: "About the archive", value: "archive" },
         ]
-      : [
-          { label: "Projects", value: "projects" },
-          { label: "Review queue", value: "review" },
-          { label: "Archive", value: "archive" },
-        ]
+      : role === "guest"
+        ? [
+            { label: "Projects", value: "projects" },
+            { label: "About the archive", value: "archive" },
+          ]
+        : [
+            { label: "Projects", value: "projects" },
+            { label: "Review queue", value: "review" },
+            { label: "Archive", value: "archive" },
+          ]
 
   return (
     <header className="sticky top-0 z-40 border-b border-[#d9d7d0] bg-[#fffefa]/95 backdrop-blur">
@@ -342,7 +356,7 @@ function Header({
               className="flex cursor-pointer items-center gap-3 text-left"
             >
               <span className="grid size-10 place-items-center rounded-full border border-[#a92d35] bg-[#f7efed] text-sm font-bold text-[#a92d35]">
-                {role === "student" ? "SS" : "ER"}
+                {role === "student" ? "SS" : role === "faculty" ? "ER" : "G"}
               </span>
               <span className="hidden leading-tight lg:block">
                 <strong className="block text-sm">{person}</strong>
@@ -485,12 +499,12 @@ function ProjectsView({
             Capstone archive
           </p>
           <h1 className="mt-3 text-4xl font-medium tracking-tight md:text-5xl">
-            {role === "student"
+            {role !== "faculty"
               ? "Explore approved projects"
               : "Project archive"}
           </h1>
           <p className="mt-3 text-[#71726e]">
-            {role === "student"
+            {role !== "faculty"
               ? "Discover teams, technologies, and ideas from across the University of Tampa."
               : "Browse, maintain, and curate approved capstone records."}
           </p>
@@ -843,7 +857,7 @@ function ArchiveView({ role }: { role: Role }) {
           ? "Archived project records"
           : "Built to preserve what students learn."}
       </h1>
-      {role === "student" ? (
+      {role !== "faculty" ? (
         <div className="mt-10 grid gap-10 lg:grid-cols-[1.2fr_0.8fr]">
           <div className="rounded-lg bg-[#171a18] p-10 text-white">
             <p className="text-2xl leading-relaxed">
@@ -937,6 +951,30 @@ function ArchiveView({ role }: { role: Role }) {
 function ProfileView({ role }: { role: Role }) {
   const [saved, setSaved] = useState(false)
   const faculty = role === "faculty"
+  if (role === "guest") {
+    return (
+      <main className="mx-auto max-w-[760px] px-6 py-12 lg:px-14">
+        <p className="text-xs font-bold uppercase tracking-wide text-[#a92d35]">
+          Guest access
+        </p>
+        <h1 className="mt-3 text-4xl font-medium tracking-tight">
+          Guest profile
+        </h1>
+        <section className="mt-9 rounded-lg border border-[#d9d7d0] bg-[#fffefa] p-7">
+          <span className="grid size-20 place-items-center rounded-full border border-[#a92d35] bg-[#f7efed] text-2xl font-semibold text-[#a92d35]">
+            G
+          </span>
+          <h2 className="mt-5 text-2xl font-semibold">Guest visitor</h2>
+          <p className="mt-2 text-sm leading-6 text-[#71726e]">
+            You can browse approved University of Tampa capstone projects and
+            learn about the archive. Project submissions and faculty review
+            tools are available only to their respective university users.
+          </p>
+          <Badge tone="blue">Read-only access</Badge>
+        </section>
+      </main>
+    )
+  }
   return (
     <main className="mx-auto max-w-[1120px] px-6 py-12 lg:px-14">
       <p className="text-xs font-bold uppercase tracking-wide text-[#a92d35]">
@@ -1305,33 +1343,43 @@ function AuthScreen({ onContinue }: { onContinue: (role: Role) => void }) {
             Welcome to Deimos
           </h2>
           <p className="mt-2 text-[#6f716d]">
-            Use your university credentials to continue.
+            Choose how you’d like to explore the capstone archive.
           </p>
 
-          <div className="mt-7 grid grid-cols-2 rounded-lg bg-[#edeae3] p-1">
-            <button
-              onClick={() => setMode("signin")}
-              className={`cursor-pointer rounded-md py-3 text-sm font-semibold transition ${
-                mode === "signin" ? "bg-[#fffefa] shadow-sm" : "text-[#6f716d]"
-              }`}
-            >
-              Sign in
-            </button>
-            <button
-              onClick={() => setMode("create")}
-              className={`cursor-pointer rounded-md py-3 text-sm font-semibold transition ${
-                mode === "create" ? "bg-[#fffefa] shadow-sm" : "text-[#6f716d]"
-              }`}
-            >
-              Create account
-            </button>
-          </div>
+          {accountRole !== "guest" && (
+            <div className="mt-7 grid grid-cols-2 rounded-lg bg-[#edeae3] p-1">
+              <button
+                onClick={() => setMode("signin")}
+                className={`cursor-pointer rounded-md py-3 text-sm font-semibold transition ${
+                  mode === "signin"
+                    ? "bg-[#fffefa] shadow-sm"
+                    : "text-[#6f716d]"
+                }`}
+              >
+                Sign in
+              </button>
+              <button
+                onClick={() => setMode("create")}
+                className={`cursor-pointer rounded-md py-3 text-sm font-semibold transition ${
+                  mode === "create"
+                    ? "bg-[#fffefa] shadow-sm"
+                    : "text-[#6f716d]"
+                }`}
+              >
+                Create account
+              </button>
+            </div>
+          )}
 
           <p className="mt-7 text-sm font-semibold">
-            I am {mode === "create" ? "creating an" : "signing in to an"}...
+            {accountRole === "guest"
+              ? "Browse the archive as a..."
+              : `I am ${
+                  mode === "create" ? "creating an" : "signing in to an"
+                }...`}
           </p>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            {(["student", "faculty"] as Role[]).map((item) => {
+            {(["student", "faculty", "guest"] as Role[]).map((item) => {
               const active = accountRole === item
               return (
                 <button
@@ -1352,18 +1400,26 @@ function AuthScreen({ onContinue }: { onContinue: (role: Role) => void }) {
                     }`}
                   >
                     <Icon
-                      name={item === "student" ? "cap" : "book"}
+                      name={
+                        item === "student"
+                          ? "cap"
+                          : item === "faculty"
+                            ? "book"
+                            : "user"
+                      }
                       size={22}
                     />
                   </span>
                   <span>
                     <strong className="block text-sm capitalize">
-                      {item} account
+                      {item === "guest" ? "Guest access" : `${item} account`}
                     </strong>
                     <span className="mt-1 block text-xs leading-4 text-[#6f716d]">
                       {item === "student"
                         ? "Submit work and manage your project."
-                        : "Review, approve, and curate projects."}
+                        : item === "faculty"
+                          ? "Review, approve, and curate projects."
+                          : "Browse approved projects without an account."}
                     </span>
                   </span>
                   <i
@@ -1385,78 +1441,89 @@ function AuthScreen({ onContinue }: { onContinue: (role: Role) => void }) {
               onContinue(accountRole)
             }}
           >
-            <label className="block">
-              <span className="mb-2 block text-sm font-semibold">
-                University email
-              </span>
-              <span className="flex h-13 items-center gap-3 rounded-lg border border-[#d6d4ce] px-4 focus-within:border-[#a92d35]">
-                <Icon name="mail" className="text-[#777873]" />
-                <input
-                  type="email"
-                  required
-                  placeholder={
-                    accountRole === "student"
-                      ? "name@spartans.ut.edu"
-                      : "name@ut.edu"
-                  }
-                  className="h-full w-full bg-transparent text-sm outline-none"
-                />
-              </span>
-            </label>
-            <div
-              className={`mt-5 grid gap-4 ${
-                mode === "create" ? "sm:grid-cols-2" : ""
-              }`}
-            >
-              <label>
-                <span className="mb-2 flex items-center justify-between text-sm font-semibold">
-                  Password
-                  {mode === "signin" && (
-                    <button
-                      type="button"
-                      className="cursor-pointer text-xs text-[#a92d35]"
-                    >
-                      Forgot password?
-                    </button>
-                  )}
-                </span>
-                <span className="flex h-13 items-center gap-3 rounded-lg border border-[#d6d4ce] px-4 focus-within:border-[#a92d35]">
-                  <Icon name="lock" className="text-[#777873]" />
-                  <input
-                    type="password"
-                    required
-                    minLength={8}
-                    placeholder="At least 8 characters"
-                    className="h-full w-full bg-transparent text-sm outline-none"
-                  />
-                </span>
-              </label>
-              {mode === "create" && (
-                <label>
+            {accountRole === "guest" ? (
+              <button
+                type="submit"
+                className="h-14 w-full cursor-pointer rounded-lg bg-[#a92d35] text-sm font-semibold text-white transition hover:bg-[#8f252d]"
+              >
+                Continue as guest
+              </button>
+            ) : (
+              <>
+                <label className="block">
                   <span className="mb-2 block text-sm font-semibold">
-                    Confirm password
+                    University email
                   </span>
                   <span className="flex h-13 items-center gap-3 rounded-lg border border-[#d6d4ce] px-4 focus-within:border-[#a92d35]">
-                    <Icon name="lock" className="text-[#777873]" />
+                    <Icon name="mail" className="text-[#777873]" />
                     <input
-                      type="password"
+                      type="email"
                       required
-                      minLength={8}
-                      placeholder="Re-enter password"
+                      placeholder={
+                        accountRole === "student"
+                          ? "name@spartans.ut.edu"
+                          : "name@ut.edu"
+                      }
                       className="h-full w-full bg-transparent text-sm outline-none"
                     />
                   </span>
                 </label>
-              )}
-            </div>
-            <button
-              type="submit"
-              className="mt-6 h-14 w-full cursor-pointer rounded-lg bg-[#a92d35] text-sm font-semibold text-white transition hover:bg-[#8f252d]"
-            >
-              {mode === "signin"
-                ? `Sign in as ${accountRole}`
-                : `Create ${accountRole} account`}
-            </button>
+                <div
+                  className={`mt-5 grid gap-4 ${
+                    mode === "create" ? "sm:grid-cols-2" : ""
+                  }`}
+                >
+                  <label>
+                    <span className="mb-2 flex items-center justify-between text-sm font-semibold">
+                      Password
+                      {mode === "signin" && (
+                        <button
+                          type="button"
+                          className="cursor-pointer text-xs text-[#a92d35]"
+                        >
+                          Forgot password?
+                        </button>
+                      )}
+                    </span>
+                    <span className="flex h-13 items-center gap-3 rounded-lg border border-[#d6d4ce] px-4 focus-within:border-[#a92d35]">
+                      <Icon name="lock" className="text-[#777873]" />
+                      <input
+                        type="password"
+                        required
+                        minLength={8}
+                        placeholder="At least 8 characters"
+                        className="h-full w-full bg-transparent text-sm outline-none"
+                      />
+                    </span>
+                  </label>
+                  {mode === "create" && (
+                    <label>
+                      <span className="mb-2 block text-sm font-semibold">
+                        Confirm password
+                      </span>
+                      <span className="flex h-13 items-center gap-3 rounded-lg border border-[#d6d4ce] px-4 focus-within:border-[#a92d35]">
+                        <Icon name="lock" className="text-[#777873]" />
+                        <input
+                          type="password"
+                          required
+                          minLength={8}
+                          placeholder="Re-enter password"
+                          className="h-full w-full bg-transparent text-sm outline-none"
+                        />
+                      </span>
+                    </label>
+                  )}
+                </div>
+                <button
+                  type="submit"
+                  className="mt-6 h-14 w-full cursor-pointer rounded-lg bg-[#a92d35] text-sm font-semibold text-white transition hover:bg-[#8f252d]"
+                >
+                  {mode === "signin"
+                    ? `Sign in as ${accountRole}`
+                    : `Create ${accountRole} account`}
+                </button>
+              </>
+            )}
           </form>
           <p className="mt-6 text-center text-xs leading-5 text-[#777873]">
             By continuing, you agree to the archive guidelines and University
@@ -1512,13 +1579,15 @@ export default function App() {
           onOpen={(project) => setSelectedProject(project)}
         />
       )}
-      {view === "submissions" && (
+      {view === "submissions" && role === "student" && (
         <SubmissionsView onSubmit={() => setSubmitOpen(true)} />
       )}
       {view === "review" && <ReviewView />}
       {view === "archive" && <ArchiveView role={role} />}
       {view === "profile" && <ProfileView role={role} />}
-      {submitOpen && <SubmitModal onClose={() => setSubmitOpen(false)} />}
+      {submitOpen && role === "student" && (
+        <SubmitModal onClose={() => setSubmitOpen(false)} />
+      )}
       {selectedProject && (
         <ProjectModal
           faculty={role === "faculty"}
