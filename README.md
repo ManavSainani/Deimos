@@ -80,15 +80,15 @@ The following technologies are currently being considered for the project:
 
 | Component | Technology |
 |-----------|------------|
-| Frontend | React / Next.js |
+| Frontend | React / Vite |
 | Programming Language | TypeScript |
-| Backend | Next.js API Routes |
-| Database | PostgreSQL / Supabase |
+| Backend | Supabase Data API and PostgreSQL Row Level Security |
+| Database | Supabase PostgreSQL |
 | Authentication | Supabase Auth |
 | Repository Integration | GitHub REST API |
 | AI Processing | Selected LLM API |
 | Version Control | GitHub |
-| Deployment | Vercel |
+| Frontend Deployment | Cloudflare Pages |
 
 The technology stack may evolve as the project progresses.
 
@@ -140,9 +140,15 @@ The platform will aim to support:
 
 ## Development Workflow
 
+### Supabase backend
+
+See [supabase/README.md](supabase/README.md) for instructions to create the
+Supabase project, run the database migration, configure local and Cloudflare
+environment variables, and promote faculty accounts.
+
 ### Run locally
 
-Prerequisites: Node.js 20.19+ or 22.12+ and npm.
+Prerequisites: Node.js 22+ and npm.
 
 ```sh
 npm install

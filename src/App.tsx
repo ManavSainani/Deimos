@@ -1,4 +1,17 @@
-import { FormEvent, ReactNode, useMemo, useState } from "react"
+import { FormEvent, ReactNode, useEffect, useMemo, useState } from "react"
+import {
+  getApprovedProjects,
+  getMySubmissions,
+  getProfileRole,
+  getReviewQueue,
+  reviewProject,
+  submitProject,
+  type ArchiveProjectRow,
+  type ProjectSubmission,
+  type ReviewQueueRow,
+  type SubmissionRow,
+} from "./lib/archive"
+import { supabase } from "./lib/supabase"
 
 type Role = "student" | "faculty" | "guest"
 type View = "projects" | "submissions" | "review" | "archive" | "profile"
@@ -6,9 +19,18 @@ interface NavigationLink {
   label: string
   value: View
 }
-type SubmissionStatus = "In review" | "Changes requested" | "Approved"
+type SubmissionStatus = "In review" | "Changes requested" | "Approved" | "Rejected" | "Archived"
+
+type SubmissionItem = {
+  id?: string
+  title: string
+  updated: string
+  status: SubmissionStatus
+  note: string
+}
 
 type Project = {
+  id?: string
   title: string
   category: string
   term: string
@@ -17,6 +39,31 @@ type Project = {
   team: string
   tags: string[]
   access: string
+  repositoryUrl?: string | null
+}
+
+type ReviewItem = {
+  id: string
+  student: string
+  project: string
+  type: string
+  submitted: string
+  status: "pending_review" | "changes_requested"
+}
+
+function toProject(row: ArchiveProjectRow): Project {
+  return {
+    id: row.id,
+    title: row.title,
+    category: row.category,
+    term: row.term,
+    year: row.academic_year,
+    description: row.description,
+    team: row.team_members.join(", "),
+    tags: row.technologies,
+    access: row.repository_access,
+    repositoryUrl: row.repository_url,
+  }
 }
 
 const projects: Project[] = [
@@ -77,12 +124,7 @@ const projects: Project[] = [
   },
 ]
 
-const submissions: {
-  title: string
-  updated: string
-  status: SubmissionStatus
-  note: string
-}[] = [
+const submissions: SubmissionItem[] = [
   {
     title: "Library SeatSense",
     updated: "Updated April 18, 2026",
@@ -103,26 +145,68 @@ const submissions: {
   },
 ]
 
-const reviewItems = [
+function toSubmission(row: SubmissionRow): SubmissionItem {
+  const status: Record<SubmissionRow["status"], SubmissionStatus> = {
+    pending_review: "In review",
+    changes_requested: "Changes requested",
+    approved: "Approved",
+    rejected: "Rejected",
+    archived: "Archived",
+  }
+  return {
+    id: row.id,
+    title: row.title,
+    updated: `Submitted ${new Date(row.created_at).toLocaleDateString()}`,
+    status: status[row.status],
+    note:
+      row.review_note ||
+      {
+        pending_review: "Submitted for faculty review",
+        changes_requested: "Faculty requested changes",
+        approved: "Published to the archive",
+        rejected: "Not approved for the archive",
+        archived: "This project is archived",
+      }[row.status],
+  }
+}
+
+const reviewItems: ReviewItem[] = [
   {
+    id: "demo-1",
     student: "Maya Patel",
     project: "Library SeatSense",
     type: "Web Application",
     submitted: "2 hours ago",
+    status: "pending_review",
   },
   {
+    id: "demo-2",
     student: "Noah Williams",
     project: "Bayshore Flood Mapper",
     type: "Data Visualization",
     submitted: "Yesterday",
+    status: "pending_review",
   },
   {
+    id: "demo-3",
     student: "Isabella Garcia",
     project: "Accessible UT",
     type: "Mobile Application",
     submitted: "April 17",
+    status: "pending_review",
   },
 ]
+
+function toReviewItem(row: ReviewQueueRow): ReviewItem {
+  return {
+    id: row.id,
+    student: "Student team",
+    project: row.title,
+    type: row.category,
+    submitted: new Date(row.created_at).toLocaleDateString(),
+    status: row.status,
+  }
+}
 
 function Icon({
   name,
@@ -465,9 +549,13 @@ function ProjectCard({
 
 function ProjectsView({
   role,
+  projects: archiveProjects,
+  loadError,
   onOpen,
 }: {
   role: Role
+  projects: Project[]
+  loadError: string
   onOpen: (project: Project) => void
 }) {
   const [query, setQuery] = useState("")
@@ -476,7 +564,7 @@ function ProjectsView({
 
   const filtered = useMemo(
     () =>
-      projects.filter(
+      archiveProjects.filter(
         (project) =>
           (!query ||
             `${project.title} ${project.team} ${project.tags.join(" ")}`
@@ -485,11 +573,11 @@ function ProjectsView({
           (category === "All categories" || project.category === category) &&
           (year === "All years" || String(project.year) === year),
       ),
-    [query, category, year],
+    [archiveProjects, query, category, year],
   )
 
-  const years = [2026, 2025].filter((item) =>
-    filtered.some((project) => project.year === item),
+  const years = [...new Set(filtered.map((project) => project.year))].sort(
+    (a, b) => b - a,
   )
   return (
     <main className="mx-auto max-w-[1450px] px-6 py-12 lg:px-14 lg:py-14">
@@ -551,11 +639,11 @@ function ProjectsView({
               className="h-12 w-full rounded border border-[#d6d4ce] bg-transparent px-3 text-sm"
             >
               <option>All categories</option>
-              {[...new Set(projects.map((project) => project.category))].map(
-                (item) => (
-                  <option key={item}>{item}</option>
-                ),
-              )}
+              {[
+                ...new Set(archiveProjects.map((project) => project.category)),
+              ].map((item) => (
+                <option key={item}>{item}</option>
+              ))}
             </select>
           </label>
           <label className="block">
@@ -592,6 +680,12 @@ function ProjectsView({
           </button>
         </div>
       </section>
+
+      {loadError && (
+        <p className="mt-6 rounded border border-[#e6c6c6] bg-[#fbefef] p-4 text-sm text-[#8f252d]">
+          Could not load approved projects: {loadError}
+        </p>
+      )}
 
       {years.map((groupYear) => {
         const group = filtered.filter((project) => project.year === groupYear)
@@ -660,7 +754,15 @@ function Metric({
   )
 }
 
-function SubmissionsView({ onSubmit }: { onSubmit: () => void }) {
+function SubmissionsView({
+  items,
+  loadError,
+  onSubmit,
+}: {
+  items: SubmissionItem[]
+  loadError: string
+  onSubmit: () => void
+}) {
   return (
     <main className="mx-auto max-w-[1320px] px-6 py-12 lg:px-14">
       <div className="flex items-end justify-between">
@@ -682,22 +784,31 @@ function SubmissionsView({ onSubmit }: { onSubmit: () => void }) {
           New submission
         </button>
       </div>
+      {loadError && (
+        <p className="mt-6 rounded bg-[#fbefef] p-3 text-sm text-[#8f252d]">
+          Could not load your submissions: {loadError}
+        </p>
+      )}
       <div className="mt-9 grid gap-4 md:grid-cols-3">
         <Metric
           label="Total submissions"
-          value="3"
+          value={String(items.length)}
           icon="folder"
           detail="Across 2 academic years"
         />
         <Metric
           label="Awaiting review"
-          value="1"
+          value={String(
+            items.filter((item) => item.status === "In review").length,
+          )}
           icon="clock"
           detail="Usually reviewed in 3–5 days"
         />
         <Metric
           label="Published"
-          value="1"
+          value={String(
+            items.filter((item) => item.status === "Approved").length,
+          )}
           icon="check"
           detail="Visible in the project archive"
         />
@@ -706,9 +817,9 @@ function SubmissionsView({ onSubmit }: { onSubmit: () => void }) {
         <div className="border-b border-[#dfddd6] px-6 py-5">
           <h2 className="text-lg font-semibold">Recent submissions</h2>
         </div>
-        {submissions.map((item) => (
+        {items.map((item) => (
           <div
-            key={item.title}
+            key={item.id ?? item.title}
             className="grid gap-4 border-b border-[#e2e0da] px-6 py-5 last:border-0 md:grid-cols-[1fr_180px_1fr_auto] md:items-center"
           >
             <div>
@@ -724,7 +835,11 @@ function SubmissionsView({ onSubmit }: { onSubmit: () => void }) {
                     ? "green"
                     : item.status === "Changes requested"
                       ? "amber"
-                      : "blue"
+                      : item.status === "Rejected"
+                        ? "red"
+                        : item.status === "Archived"
+                          ? "neutral"
+                          : "blue"
                 }
               >
                 {item.status}
@@ -737,13 +852,55 @@ function SubmissionsView({ onSubmit }: { onSubmit: () => void }) {
             </button>
           </div>
         ))}
+        {items.length === 0 && (
+          <p className="px-6 py-12 text-center text-sm text-[#71726e]">
+            You haven’t submitted a project yet.
+          </p>
+        )}
       </section>
     </main>
   )
 }
 
-function ReviewView() {
+function ReviewView({
+  items,
+  approvedCount,
+  loadError,
+  onReview,
+}: {
+  items: ReviewItem[]
+  approvedCount: number
+  loadError: string
+  onReview: (
+    projectId: string,
+    decision: "approved" | "changes_requested",
+  ) => Promise<void>
+}) {
   const [decisions, setDecisions] = useState<Record<string, string>>({})
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState("")
+  const decide = async (
+    item: ReviewItem,
+    decision: "approved" | "changes_requested",
+  ) => {
+    setSaving(true)
+    setError("")
+    try {
+      await onReview(item.id, decision)
+      setDecisions((current) => ({
+        ...current,
+        [item.id]: decision === "approved" ? "Approved" : "Changes requested",
+      }))
+    } catch (reviewError) {
+      setError(
+        reviewError instanceof Error
+          ? reviewError.message
+          : "Could not save the review decision.",
+      )
+    } finally {
+      setSaving(false)
+    }
+  }
   return (
     <main className="mx-auto max-w-[1320px] px-6 py-12 lg:px-14">
       <div>
@@ -760,19 +917,23 @@ function ReviewView() {
       <div className="mt-9 grid gap-4 md:grid-cols-3">
         <Metric
           label="Awaiting review"
-          value="3"
+          value={String(
+            items.filter((item) => item.status === "pending_review").length,
+          )}
           icon="clock"
           detail="2 added this week"
         />
         <Metric
           label="Approved this term"
-          value="24"
+          value={String(approvedCount)}
           icon="check"
-          detail="89% approval rate"
+          detail="Visible in the public archive"
         />
         <Metric
           label="Changes requested"
-          value="5"
+          value={String(
+            items.filter((item) => item.status === "changes_requested").length,
+          )}
           icon="edit"
           detail="Students have been notified"
         />
@@ -784,9 +945,14 @@ function ReviewView() {
             Oldest submissions first
           </span>
         </div>
-        {reviewItems.map((item) => (
+        {(error || loadError) && (
+          <p className="m-5 rounded bg-[#fbefef] p-3 text-sm text-[#8f252d]">
+            {error || loadError}
+          </p>
+        )}
+        {items.map((item) => (
           <article
-            key={item.project}
+            key={item.id}
             className="grid gap-5 border-b border-[#e2e0da] px-6 py-6 last:border-0 lg:grid-cols-[1fr_180px_150px_auto] lg:items-center"
           >
             <div>
@@ -799,37 +965,35 @@ function ReviewView() {
                 Submitted by {item.student}
               </p>
             </div>
-            {decisions[item.project] ? (
+            {decisions[item.id] ? (
               <Badge
-                tone={decisions[item.project] === "Approved" ? "green" : "red"}
+                tone={decisions[item.id] === "Approved" ? "green" : "amber"}
               >
-                {decisions[item.project]}
+                {decisions[item.id]}
               </Badge>
             ) : (
-              <span className="text-sm text-[#777873]">Ready for review</span>
+              <Badge
+                tone={item.status === "changes_requested" ? "amber" : "blue"}
+              >
+                {item.status === "changes_requested"
+                  ? "Changes requested"
+                  : "Ready for review"}
+              </Badge>
             )}
             <button className="cursor-pointer text-left text-sm font-semibold text-[#a92d35] hover:underline">
               View submission
             </button>
             <div className="flex gap-2">
               <button
-                onClick={() =>
-                  setDecisions((current) => ({
-                    ...current,
-                    [item.project]: "Changes requested",
-                  }))
-                }
+                disabled={saving}
+                onClick={() => void decide(item, "changes_requested")}
                 className="cursor-pointer rounded border border-[#b7b5ae] px-4 py-2 text-sm font-semibold hover:bg-[#f2efe8]"
               >
                 Request changes
               </button>
               <button
-                onClick={() =>
-                  setDecisions((current) => ({
-                    ...current,
-                    [item.project]: "Approved",
-                  }))
-                }
+                disabled={saving}
+                onClick={() => void decide(item, "approved")}
                 className="cursor-pointer rounded bg-[#a92d35] px-4 py-2 text-sm font-semibold text-white hover:bg-[#8f252d]"
               >
                 Approve
@@ -837,6 +1001,11 @@ function ReviewView() {
             </div>
           </article>
         ))}
+        {items.length === 0 && (
+          <p className="px-6 py-12 text-center text-sm text-[#71726e]">
+            There are no projects waiting for review.
+          </p>
+        )}
       </section>
     </main>
   )
@@ -1070,14 +1239,17 @@ function ProfileView({ role }: { role: Role }) {
 function Field({
   label,
   defaultValue,
+  name,
 }: {
   label: string
   defaultValue: string
+  name?: string
 }) {
   return (
     <label>
       <span className="mb-2 block text-sm font-medium">{label}</span>
       <input
+        name={name}
         defaultValue={defaultValue}
         className="h-12 w-full rounded border border-[#d6d4ce] bg-transparent px-3 text-sm outline-none focus:border-[#a92d35]"
       />
@@ -1119,11 +1291,45 @@ function Modal({
   )
 }
 
-function SubmitModal({ onClose }: { onClose: () => void }) {
+function SubmitModal({
+  onClose,
+  onSubmit,
+}: {
+  onClose: () => void
+  onSubmit: (submission: ProjectSubmission) => Promise<void>
+}) {
   const [sent, setSent] = useState(false)
-  const submit = (event: FormEvent) => {
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState("")
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    setSent(true)
+    setSaving(true)
+    setError("")
+    const formData = new FormData(event.currentTarget)
+    const [term, year] = String(formData.get("termYear")).split(" ")
+    try {
+      await onSubmit({
+        title: String(formData.get("title")),
+        category: String(formData.get("category")),
+        term: term as ProjectSubmission["term"],
+        academicYear: Number(year),
+        description: String(formData.get("description")),
+        teamMembers: String(formData.get("teamMembers"))
+          .split(",")
+          .map((name) => name.trim())
+          .filter(Boolean),
+        repositoryUrl: String(formData.get("repositoryUrl") || "") || null,
+      })
+      setSent(true)
+    } catch (submitError) {
+      setError(
+        submitError instanceof Error
+          ? submitError.message
+          : "Could not submit the project. Please try again.",
+      )
+    } finally {
+      setSaving(false)
+    }
   }
   return (
     <Modal
@@ -1157,6 +1363,7 @@ function SubmitModal({ onClose }: { onClose: () => void }) {
                 Project title
               </span>
               <input
+                name="title"
                 required
                 placeholder="Enter the full project name"
                 className="h-12 w-full rounded border border-[#d6d4ce] px-3 text-sm outline-none focus:border-[#a92d35]"
@@ -1166,7 +1373,10 @@ function SubmitModal({ onClose }: { onClose: () => void }) {
               <span className="mb-2 block text-sm font-medium">
                 Project type
               </span>
-              <select className="h-12 w-full rounded border border-[#d6d4ce] px-3 text-sm">
+              <select
+                name="category"
+                className="h-12 w-full rounded border border-[#d6d4ce] px-3 text-sm"
+              >
                 <option>Web Application</option>
                 <option>Mobile Application</option>
                 <option>AI / Machine Learning</option>
@@ -1177,9 +1387,13 @@ function SubmitModal({ onClose }: { onClose: () => void }) {
               <span className="mb-2 block text-sm font-medium">
                 Academic term
               </span>
-              <select className="h-12 w-full rounded border border-[#d6d4ce] px-3 text-sm">
+              <select
+                name="termYear"
+                className="h-12 w-full rounded border border-[#d6d4ce] px-3 text-sm"
+              >
                 <option>Spring 2026</option>
                 <option>Fall 2026</option>
+                <option>Summer 2026</option>
               </select>
             </label>
             <label className="sm:col-span-2">
@@ -1187,14 +1401,24 @@ function SubmitModal({ onClose }: { onClose: () => void }) {
                 Project summary
               </span>
               <textarea
+                name="description"
                 required
                 placeholder="Describe the problem, approach, and outcome"
                 className="min-h-28 w-full rounded border border-[#d6d4ce] p-3 text-sm outline-none focus:border-[#a92d35]"
               />
             </label>
-            <Field label="Team members" defaultValue="Sample Student" />
-            <Field label="Repository URL" defaultValue="https://github.com/" />
+            <Field label="Team members" defaultValue="" name="teamMembers" />
+            <Field
+              label="Repository URL"
+              defaultValue=""
+              name="repositoryUrl"
+            />
           </div>
+          {error && (
+            <p className="mt-5 rounded bg-[#fbefef] p-3 text-sm text-[#8f252d]">
+              {error}
+            </p>
+          )}
           <div className="mt-7 flex justify-end gap-3 border-t border-[#dfddd6] pt-6">
             <button
               type="button"
@@ -1205,9 +1429,10 @@ function SubmitModal({ onClose }: { onClose: () => void }) {
             </button>
             <button
               type="submit"
+              disabled={saving}
               className="cursor-pointer rounded bg-[#a92d35] px-5 py-3 text-sm font-semibold text-white hover:bg-[#8f252d]"
             >
-              Submit for review
+              {saving ? "Submitting..." : "Submit for review"}
             </button>
           </div>
         </form>
@@ -1296,9 +1521,30 @@ function ProjectModal({
   )
 }
 
-function AuthScreen({ onContinue }: { onContinue: (role: Role) => void }) {
+function AuthScreen({
+  onContinue,
+  error,
+  notice,
+  loading,
+  demoMode,
+}: {
+  onContinue: (
+    role: Role,
+    mode: "signin" | "create",
+    email: string,
+    password: string,
+  ) => void
+  error: string
+  notice: string
+  loading: boolean
+  demoMode: boolean
+}) {
   const [mode, setMode] = useState<"signin" | "create">("create")
   const [accountRole, setAccountRole] = useState<Role>("student")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [formError, setFormError] = useState("")
 
   return (
     <main className="grid min-h-screen bg-[#f4f1ea] lg:grid-cols-[38%_62%]">
@@ -1345,6 +1591,12 @@ function AuthScreen({ onContinue }: { onContinue: (role: Role) => void }) {
           <p className="mt-2 text-[#6f716d]">
             Choose how you’d like to explore the capstone archive.
           </p>
+          {demoMode && (
+            <p className="mt-4 rounded border border-[#ead9ae] bg-[#fbf5e6] p-3 text-sm text-[#765c21]">
+              Demo mode: connect Supabase to enable real accounts and saved
+              projects.
+            </p>
+          )}
 
           {accountRole !== "guest" && (
             <div className="mt-7 grid grid-cols-2 rounded-lg bg-[#edeae3] p-1">
@@ -1438,7 +1690,12 @@ function AuthScreen({ onContinue }: { onContinue: (role: Role) => void }) {
             className="mt-6"
             onSubmit={(event) => {
               event.preventDefault()
-              onContinue(accountRole)
+              setFormError("")
+              if (mode === "create" && password !== confirmPassword) {
+                setFormError("Passwords do not match.")
+                return
+              }
+              onContinue(accountRole, mode, email, password)
             }}
           >
             {accountRole === "guest" ? (
@@ -1459,6 +1716,8 @@ function AuthScreen({ onContinue }: { onContinue: (role: Role) => void }) {
                     <input
                       type="email"
                       required
+                      value={email}
+                      onChange={(event) => setEmail(event.target.value)}
                       placeholder={
                         accountRole === "student"
                           ? "name@spartans.ut.edu"
@@ -1491,6 +1750,8 @@ function AuthScreen({ onContinue }: { onContinue: (role: Role) => void }) {
                         type="password"
                         required
                         minLength={8}
+                        value={password}
+                        onChange={(event) => setPassword(event.target.value)}
                         placeholder="At least 8 characters"
                         className="h-full w-full bg-transparent text-sm outline-none"
                       />
@@ -1507,6 +1768,10 @@ function AuthScreen({ onContinue }: { onContinue: (role: Role) => void }) {
                           type="password"
                           required
                           minLength={8}
+                          value={confirmPassword}
+                          onChange={(event) =>
+                            setConfirmPassword(event.target.value)
+                          }
                           placeholder="Re-enter password"
                           className="h-full w-full bg-transparent text-sm outline-none"
                         />
@@ -1516,18 +1781,32 @@ function AuthScreen({ onContinue }: { onContinue: (role: Role) => void }) {
                 </div>
                 <button
                   type="submit"
+                  disabled={loading}
                   className="mt-6 h-14 w-full cursor-pointer rounded-lg bg-[#a92d35] text-sm font-semibold text-white transition hover:bg-[#8f252d]"
                 >
-                  {mode === "signin"
-                    ? `Sign in as ${accountRole}`
-                    : `Create ${accountRole} account`}
+                  {loading
+                    ? "Please wait..."
+                    : mode === "signin"
+                      ? `Sign in as ${accountRole}`
+                      : `Create ${accountRole} account`}
                 </button>
               </>
             )}
           </form>
+          {(formError || error) && (
+            <p className="mt-4 rounded bg-[#fbefef] p-3 text-sm text-[#8f252d]">
+              {formError || error}
+            </p>
+          )}
+          {notice && (
+            <p className="mt-4 rounded bg-[#e8f1ea] p-3 text-sm text-[#347153]">
+              {notice}
+            </p>
+          )}
           <p className="mt-6 text-center text-xs leading-5 text-[#777873]">
-            By continuing, you agree to the archive guidelines and University
-            technology policies.
+            {accountRole === "guest"
+              ? "Guest access is read-only and does not require an account."
+              : "By continuing, you agree to the archive guidelines and University technology policies."}
           </p>
         </div>
       </section>
@@ -1537,7 +1816,23 @@ function AuthScreen({ onContinue }: { onContinue: (role: Role) => void }) {
 
 export default function App() {
   const [authenticated, setAuthenticated] = useState(false)
+  const [authLoading, setAuthLoading] = useState(Boolean(supabase))
+  const [authBusy, setAuthBusy] = useState(false)
+  const [authError, setAuthError] = useState("")
+  const [authNotice, setAuthNotice] = useState("")
   const [role, setRole] = useState<Role>("student")
+  const [archiveProjects, setArchiveProjects] = useState<Project[]>(
+    supabase ? [] : projects,
+  )
+  const [projectLoadError, setProjectLoadError] = useState("")
+  const [submissionLoadError, setSubmissionLoadError] = useState("")
+  const [reviewLoadError, setReviewLoadError] = useState("")
+  const [mySubmissions, setMySubmissions] = useState<SubmissionItem[]>(
+    supabase ? [] : submissions,
+  )
+  const [reviewQueue, setReviewQueue] = useState<ReviewItem[]>(
+    supabase ? [] : reviewItems,
+  )
   const [view, setView] = useState<View>("projects")
   const [submitOpen, setSubmitOpen] = useState(false)
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
@@ -1547,13 +1842,191 @@ export default function App() {
     setView(nextRole === "faculty" ? "review" : "projects")
   }
 
+  const loadUserRole = async (userId: string) => {
+    const accountRole = await getProfileRole(userId)
+    changeRole(accountRole)
+    setAuthenticated(true)
+  }
+
+  useEffect(() => {
+    if (!supabase) return
+    let cancelled = false
+    supabase.auth
+      .getSession()
+      .then(async ({ data, error }) => {
+        if (error) throw error
+        if (data.session?.user) await loadUserRole(data.session.user.id)
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) {
+          setAuthError(
+            error instanceof Error
+              ? error.message
+              : "Could not restore your session.",
+          )
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setAuthLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!supabase || !authenticated || role !== "student") return
+    let cancelled = false
+    getMySubmissions()
+      .then((rows) => {
+        if (!cancelled) setMySubmissions(rows.map(toSubmission))
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) {
+          setSubmissionLoadError(
+            error instanceof Error
+              ? error.message
+              : "Could not load your submissions.",
+          )
+        }
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [authenticated, role])
+
+  useEffect(() => {
+    if (!supabase || !authenticated || role !== "faculty") return
+    let cancelled = false
+    getReviewQueue()
+      .then((rows) => {
+        if (!cancelled) setReviewQueue(rows.map(toReviewItem))
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) {
+          setReviewLoadError(
+            error instanceof Error
+              ? error.message
+              : "Could not load the review queue.",
+          )
+        }
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [authenticated, role])
+
+  useEffect(() => {
+    if (!supabase) return
+    let cancelled = false
+    getApprovedProjects()
+      .then((rows) => {
+        if (!cancelled) setArchiveProjects(rows.map(toProject))
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) {
+          setProjectLoadError(
+            error instanceof Error ? error.message : "Please try again later.",
+          )
+        }
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const handleContinue = async (
+    nextRole: Role,
+    mode: "signin" | "create",
+    email: string,
+    password: string,
+  ) => {
+    setAuthError("")
+    setAuthNotice("")
+    if (nextRole === "guest" || !supabase) {
+      changeRole(nextRole)
+      setAuthenticated(true)
+      return
+    }
+    if (mode === "create" && nextRole === "faculty") {
+      setAuthError(
+        "Faculty accounts must be created by an archive administrator. Choose Sign in if your account is already set up.",
+      )
+      return
+    }
+
+    setAuthBusy(true)
+    try {
+      if (mode === "create") {
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { emailRedirectTo: window.location.origin },
+        })
+        if (error) throw error
+        if (!data.session) {
+          setAuthNotice(
+            "Check your email to confirm your account, then sign in.",
+          )
+          return
+        }
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        })
+        if (error) throw error
+      }
+
+      const { data, error } = await supabase.auth.getUser()
+      if (error) throw error
+      if (!data.user) throw new Error("Could not read the signed-in user.")
+      await loadUserRole(data.user.id)
+    } catch (error) {
+      setAuthError(
+        error instanceof Error ? error.message : "Could not sign you in.",
+      )
+    } finally {
+      setAuthBusy(false)
+    }
+  }
+
+  const handleProjectSubmit = async (submission: ProjectSubmission) => {
+    if (!supabase) return
+    await submitProject(submission)
+    const rows = await getMySubmissions()
+    setMySubmissions(rows.map(toSubmission))
+  }
+
+  const handleReview = async (
+    projectId: string,
+    decision: "approved" | "changes_requested",
+  ) => {
+    if (!supabase) return
+    await reviewProject(projectId, decision)
+    const [queueRows, projectRows] = await Promise.all([
+      getReviewQueue(),
+      getApprovedProjects(),
+    ])
+    setReviewQueue(queueRows.map(toReviewItem))
+    setArchiveProjects(projectRows.map(toProject))
+  }
+
+  if (authLoading) {
+    return (
+      <main className="grid min-h-screen place-items-center bg-[#f4f1ea] text-[#171a18]">
+        Loading your Deimos session...
+      </main>
+    )
+  }
   if (!authenticated) {
     return (
       <AuthScreen
-        onContinue={(nextRole) => {
-          changeRole(nextRole)
-          setAuthenticated(true)
-        }}
+        onContinue={handleContinue}
+        error={authError}
+        notice={authNotice}
+        loading={authBusy}
+        demoMode={!supabase}
       />
     )
   }
@@ -1567,6 +2040,7 @@ export default function App() {
         onSubmit={() => setSubmitOpen(true)}
         onSignOut={() => {
           setAuthenticated(false)
+          if (supabase) void supabase.auth.signOut()
           setRole("student")
           setView("projects")
           setSubmitOpen(false)
@@ -1576,17 +2050,33 @@ export default function App() {
       {view === "projects" && (
         <ProjectsView
           role={role}
+          projects={archiveProjects}
+          loadError={projectLoadError}
           onOpen={(project) => setSelectedProject(project)}
         />
       )}
       {view === "submissions" && role === "student" && (
-        <SubmissionsView onSubmit={() => setSubmitOpen(true)} />
+        <SubmissionsView
+          items={mySubmissions}
+          loadError={submissionLoadError}
+          onSubmit={() => setSubmitOpen(true)}
+        />
       )}
-      {view === "review" && <ReviewView />}
+      {view === "review" && (
+        <ReviewView
+          items={reviewQueue}
+          approvedCount={archiveProjects.length}
+          loadError={reviewLoadError}
+          onReview={handleReview}
+        />
+      )}
       {view === "archive" && <ArchiveView role={role} />}
       {view === "profile" && <ProfileView role={role} />}
       {submitOpen && role === "student" && (
-        <SubmitModal onClose={() => setSubmitOpen(false)} />
+        <SubmitModal
+          onClose={() => setSubmitOpen(false)}
+          onSubmit={handleProjectSubmit}
+        />
       )}
       {selectedProject && (
         <ProjectModal
