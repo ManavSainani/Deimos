@@ -1,20 +1,30 @@
 import { FormEvent, ReactNode, useEffect, useMemo, useState } from "react"
 import {
   getApprovedProjects,
+  getAuthorizedUsers,
   getMySubmissions,
   getProfileRole,
   getReviewQueue,
   reviewProject,
+  addAuthorizedUser,
+  removeAuthorizedUser,
   submitProject,
   type ArchiveProjectRow,
+  type AuthorizedUser,
   type ProjectSubmission,
   type ReviewQueueRow,
   type SubmissionRow,
 } from "./lib/archive"
 import { supabase } from "./lib/supabase"
 
-type Role = "student" | "faculty" | "guest"
-type View = "projects" | "submissions" | "review" | "archive" | "profile"
+type Role = "student" | "faculty" | "admin" | "guest"
+type View =
+  | "projects"
+  | "submissions"
+  | "review"
+  | "users"
+  | "archive"
+  | "profile"
 interface NavigationLink {
   label: string
   value: View
@@ -381,7 +391,9 @@ function Header({
       ? "Sample Student"
       : role === "faculty"
         ? "Dr. Elena Ruiz"
-        : "Guest visitor"
+        : role === "admin"
+          ? "Archive admin"
+          : "Guest visitor"
   const links: NavigationLink[] =
     role === "student"
       ? [
@@ -394,6 +406,12 @@ function Header({
             { label: "Projects", value: "projects" },
             { label: "About the archive", value: "archive" },
           ]
+        : role === "admin"
+          ? [
+              { label: "Projects", value: "projects" },
+              { label: "Authorized users", value: "users" },
+              { label: "Archive", value: "archive" },
+            ]
         : [
             { label: "Projects", value: "projects" },
             { label: "Review queue", value: "review" },
@@ -444,7 +462,13 @@ function Header({
               className="flex cursor-pointer items-center gap-3 text-left"
             >
               <span className="grid size-10 place-items-center rounded-full border border-[#a92d35] bg-[#f7efed] text-sm font-bold text-[#a92d35]">
-                {role === "student" ? "SS" : role === "faculty" ? "ER" : "G"}
+                {role === "student"
+                  ? "SS"
+                  : role === "faculty"
+                    ? "ER"
+                    : role === "admin"
+                      ? "AD"
+                      : "G"}
               </span>
               <span className="hidden leading-tight lg:block">
                 <strong className="block text-sm">{person}</strong>
@@ -1629,6 +1653,253 @@ function ProjectModal({
   )
 }
 
+function AuthorizedUsersView({ demoMode }: { demoMode: boolean }) {
+  const [users, setUsers] = useState<AuthorizedUser[]>(
+    demoMode
+      ? [
+          {
+            email: "admin@deimos.demo",
+            role: "admin",
+            created_at: "2026-08-14T12:00:00.000Z",
+          },
+          {
+            email: "maya.patel@spartans.ut.edu",
+            role: "student",
+            created_at: "2026-08-18T12:00:00.000Z",
+          },
+          {
+            email: "elena.ruiz@ut.edu",
+            role: "faculty",
+            created_at: "2026-09-03T12:00:00.000Z",
+          },
+        ]
+      : [],
+  )
+  const [currentAdminEmail, setCurrentAdminEmail] = useState(
+    demoMode ? "admin@deimos.demo" : "",
+  )
+  const [loading, setLoading] = useState(!demoMode)
+  const [saving, setSaving] = useState(false)
+  const [pendingRemoval, setPendingRemoval] = useState("")
+  const [error, setError] = useState("")
+  const [notice, setNotice] = useState("")
+
+  const refreshUsers = async () => {
+    const rows = await getAuthorizedUsers()
+    setUsers(rows)
+  }
+
+  useEffect(() => {
+    if (demoMode) return
+    supabase?.auth.getUser().then(({ data }) => {
+      setCurrentAdminEmail(data.user?.email?.toLowerCase() ?? "")
+    })
+    refreshUsers()
+      .catch((loadError: unknown) => {
+        setError(
+          loadError instanceof Error
+            ? loadError.message
+            : "Could not load authorized users.",
+        )
+      })
+      .finally(() => setLoading(false))
+  }, [demoMode])
+
+  const handleAdd = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setSaving(true)
+    setError("")
+    setNotice("")
+    const form = event.currentTarget
+    const data = new FormData(form)
+    const email = String(data.get("email")).trim().toLowerCase()
+    const role = String(data.get("role")) as AuthorizedUser["role"]
+    try {
+      if (users.some((user) => user.email === email)) {
+        throw new Error("This email is already on the access list.")
+      }
+      if (demoMode) {
+        setUsers((current) => [
+          { email, role, created_at: new Date().toISOString() },
+          ...current,
+        ])
+      } else {
+        await addAuthorizedUser(email, role)
+        await refreshUsers()
+      }
+      form.reset()
+      setNotice(
+        demoMode
+          ? "Demo user added. This change only lasts for this session."
+          : "User authorized. They can now create an account with this email.",
+      )
+    } catch (saveError) {
+      setError(
+        saveError instanceof Error
+          ? saveError.message
+          : "Could not authorize this user.",
+      )
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleRemove = async (email: string) => {
+    setPendingRemoval(email)
+    setError("")
+    setNotice("")
+    try {
+      if (demoMode) {
+        setUsers((current) => current.filter((user) => user.email !== email))
+      } else {
+        await removeAuthorizedUser(email)
+        await refreshUsers()
+      }
+      setNotice(
+        demoMode
+          ? "Demo user removed. This change only lasts for this session."
+          : `${email} no longer has an authorized account role.`,
+      )
+    } catch (removeError) {
+      setError(
+        removeError instanceof Error
+          ? removeError.message
+          : "Could not remove this user.",
+      )
+    } finally {
+      setPendingRemoval("")
+    }
+  }
+
+  return (
+    <main className="mx-auto max-w-[1450px] px-6 py-12 lg:px-14 lg:py-14">
+      <p className="text-xs font-bold uppercase tracking-wide text-[#a92d35]">
+        Administration
+      </p>
+      <h1 className="mt-3 text-4xl font-medium tracking-tight md:text-5xl">
+        Authorized users
+      </h1>
+      <p className="mt-3 max-w-2xl text-[#71726e]">
+        Add email addresses that may create Deimos accounts, assign their role,
+        or revoke their account privileges. Approved projects remain publicly
+        viewable to guests.
+      </p>
+      {demoMode && (
+        <p className="mt-5 rounded border border-[#ead9ae] bg-[#fbf5e6] p-3 text-sm text-[#765c21]">
+          Demo admin: changes to this sample list are temporary and are not
+          saved to Supabase.
+        </p>
+      )}
+
+      <section className="mt-8 rounded-lg border border-[#d9d7d0] bg-[#fffefa] p-6 shadow-sm">
+        <h2 className="text-lg font-semibold">Authorize an email</h2>
+        <form onSubmit={handleAdd} className="mt-4 grid gap-4 md:grid-cols-[1fr_220px_auto]">
+          <label>
+            <span className="mb-2 block text-sm font-medium">Email address</span>
+            <input
+              name="email"
+              type="email"
+              required
+              placeholder="name@spartans.ut.edu"
+              className="h-12 w-full rounded border border-[#d6d4ce] bg-transparent px-3 text-sm outline-none focus:border-[#a92d35]"
+            />
+          </label>
+          <label>
+            <span className="mb-2 block text-sm font-medium">Account role</span>
+            <select
+              name="role"
+              defaultValue="student"
+              className="h-12 w-full rounded border border-[#d6d4ce] bg-[#fffefa] px-3 text-sm"
+            >
+              <option value="student">Student</option>
+              <option value="faculty">Faculty</option>
+              <option value="admin">Admin</option>
+            </select>
+          </label>
+          <button
+            type="submit"
+            disabled={saving}
+            className="mt-auto h-12 cursor-pointer rounded bg-[#a92d35] px-6 text-sm font-semibold text-white disabled:cursor-wait disabled:opacity-60"
+          >
+            {saving ? "Adding..." : "Add authorized user"}
+          </button>
+        </form>
+        {(error || notice) && (
+          <p
+            className={`mt-4 rounded p-3 text-sm ${
+              error
+                ? "bg-[#fbefef] text-[#8f252d]"
+                : "bg-[#e8f1ea] text-[#347153]"
+            }`}
+          >
+            {error || notice}
+          </p>
+        )}
+      </section>
+
+      <section className="mt-8 overflow-hidden rounded-lg border border-[#d9d7d0] bg-[#fffefa] shadow-sm">
+        <div className="flex items-center justify-between border-b border-[#dfddd6] px-6 py-5">
+          <div>
+            <h2 className="text-lg font-semibold">Access list</h2>
+            <p className="mt-1 text-sm text-[#71726e]">
+              {users.length} authorized {users.length === 1 ? "user" : "users"}
+            </p>
+          </div>
+          <Icon name="users" size={21} />
+        </div>
+        {loading ? (
+          <p className="p-6 text-sm text-[#71726e]">Loading users...</p>
+        ) : users.length ? (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[600px] text-left text-sm">
+              <thead className="bg-[#f7f5ef] text-xs uppercase tracking-wide text-[#71726e]">
+                <tr>
+                  <th className="px-6 py-3 font-semibold">Email</th>
+                  <th className="px-6 py-3 font-semibold">Role</th>
+                  <th className="px-6 py-3 font-semibold">Added</th>
+                  <th className="px-6 py-3 text-right font-semibold">Access</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.map((user) => (
+                  <tr key={user.email} className="border-t border-[#ebe9e2]">
+                    <td className="px-6 py-4 font-medium">{user.email}</td>
+                    <td className="px-6 py-4 capitalize">{user.role}</td>
+                    <td className="px-6 py-4 text-[#71726e]">
+                      {new Date(user.created_at).toLocaleDateString()}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <button
+                        type="button"
+                        onClick={() => void handleRemove(user.email)}
+                        disabled={
+                          pendingRemoval === user.email ||
+                          user.email === currentAdminEmail
+                        }
+                        className="cursor-pointer rounded border border-[#dfbfc0] px-3 py-2 text-xs font-semibold text-[#a92d35] hover:bg-[#fbefef] disabled:opacity-50"
+                      >
+                        {user.email === currentAdminEmail
+                          ? "Current account"
+                          : pendingRemoval === user.email
+                            ? "Removing..."
+                            : "Remove access"}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="p-6 text-sm text-[#71726e]">
+            No authorized users found.
+          </p>
+        )}
+      </section>
+    </main>
+  )
+}
+
 function AuthScreen({
   onContinue,
   error,
@@ -1719,7 +1990,10 @@ function AuthScreen({
                 Sign in
               </button>
               <button
-                onClick={() => setMode("create")}
+                onClick={() => {
+                  setMode("create")
+                  setAccountRole("student")
+                }}
                 className={`cursor-pointer rounded-md py-3 text-sm font-semibold transition ${
                   mode === "create"
                     ? "bg-[#fffefa] shadow-sm"
@@ -1739,7 +2013,11 @@ function AuthScreen({
                 }...`}
           </p>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            {(["student", "faculty", "guest"] as Role[]).map((item) => {
+            {(
+              mode === "create"
+                ? (["student"] as Role[])
+                : (["student", "faculty", "admin", "guest"] as Role[])
+            ).map((item) => {
               const active = accountRole === item
               return (
                 <button
@@ -1765,6 +2043,8 @@ function AuthScreen({
                           ? "cap"
                           : item === "faculty"
                             ? "book"
+                            : item === "admin"
+                              ? "users"
                             : "user"
                       }
                       size={22}
@@ -1779,6 +2059,8 @@ function AuthScreen({
                         ? "Submit work and manage your project."
                         : item === "faculty"
                           ? "Review, approve, and curate projects."
+                          : item === "admin"
+                            ? "Manage who is authorized to use Deimos."
                           : "Browse approved projects without an account."}
                     </span>
                   </span>
@@ -1947,11 +2229,21 @@ export default function App() {
 
   const changeRole = (nextRole: Role) => {
     setRole(nextRole)
-    setView(nextRole === "faculty" ? "review" : "projects")
+    setView(
+      nextRole === "faculty"
+        ? "review"
+        : nextRole === "admin"
+          ? "users"
+          : "projects",
+    )
   }
 
   const loadUserRole = async (userId: string) => {
     const accountRole = await getProfileRole(userId)
+    return accountRole
+  }
+
+  const applyUserRole = (accountRole: Role) => {
     changeRole(accountRole)
     setAuthenticated(true)
   }
@@ -1963,10 +2255,14 @@ export default function App() {
       .getSession()
       .then(async ({ data, error }) => {
         if (error) throw error
-        if (data.session?.user) await loadUserRole(data.session.user.id)
+        if (data.session?.user) {
+          const accountRole = await loadUserRole(data.session.user.id)
+          if (!cancelled) applyUserRole(accountRole)
+        }
       })
       .catch((error: unknown) => {
         if (!cancelled) {
+          if (supabase) void supabase.auth.signOut()
           setAuthError(
             error instanceof Error
               ? error.message
@@ -2089,8 +2385,14 @@ export default function App() {
       const { data, error } = await supabase.auth.getUser()
       if (error) throw error
       if (!data.user) throw new Error("Could not read the signed-in user.")
-      await loadUserRole(data.user.id)
+      const actualRole = await loadUserRole(data.user.id)
+      if (mode === "signin" && actualRole !== nextRole) {
+        await supabase.auth.signOut()
+        throw new Error(`This account does not have ${nextRole} access.`)
+      }
+      applyUserRole(actualRole)
     } catch (error) {
+      await supabase.auth.signOut()
       setAuthError(
         error instanceof Error ? error.message : "Could not sign you in.",
       )
@@ -2179,6 +2481,9 @@ export default function App() {
         />
       )}
       {view === "archive" && <ArchiveView role={role} />}
+      {view === "users" && role === "admin" && (
+        <AuthorizedUsersView demoMode={!supabase} />
+      )}
       {view === "profile" && <ProfileView role={role} />}
       {submitOpen && role === "student" && (
         <SubmitModal

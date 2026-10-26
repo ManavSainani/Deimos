@@ -45,16 +45,72 @@ export type ReviewQueueRow = {
   status: "pending_review" | "changes_requested"
 }
 
+export type AuthorizedUser = {
+  email: string
+  role: "student" | "faculty" | "admin"
+  created_at: string
+}
+
 export async function getProfileRole(userId: string) {
   const client = requireSupabase()
-  const { data, error } = await client
+  const { data: profile, error: profileError } = await client
     .from("profiles")
-    .select("role")
+    .select("role, is_admin")
     .eq("id", userId)
     .single()
 
+  if (profileError) throw profileError
+  const { data: userData, error: userError } = await client.auth.getUser()
+  if (userError) throw userError
+  const email = userData.user?.email?.toLowerCase()
+  if (!email) throw new Error("This account does not have a verified email.")
+
+  const { data: authorization, error: authorizationError } = await client
+    .from("authorized_users")
+    .select("role")
+    .eq("email", email)
+    .maybeSingle()
+  if (authorizationError) throw authorizationError
+  if (!authorization || !profile)
+    throw new Error("This email is not authorized to access Deimos.")
+  if (authorization.role === "admin" && !profile.is_admin)
+    throw new Error("Administrator access has not been configured for this account.")
+  return authorization.role as "student" | "faculty" | "admin"
+}
+
+export async function getAuthorizedUsers() {
+  const client = requireSupabase()
+  const { data, error } = await client
+    .from("authorized_users")
+    .select("email, role, created_at")
+    .order("created_at", { ascending: false })
   if (error) throw error
-  return data.role as "student" | "faculty"
+  return (data ?? []) as AuthorizedUser[]
+}
+
+export async function addAuthorizedUser(
+  email: string,
+  role: AuthorizedUser["role"],
+) {
+  const client = requireSupabase()
+  const { data: userData, error: userError } = await client.auth.getUser()
+  if (userError) throw userError
+  if (!userData.user) throw new Error("Sign in with an admin account first.")
+  const { error } = await client.from("authorized_users").insert({
+    email: email.trim().toLowerCase(),
+    role,
+    added_by: userData.user.id,
+  })
+  if (error) throw error
+}
+
+export async function removeAuthorizedUser(email: string) {
+  const client = requireSupabase()
+  const { error } = await client
+    .from("authorized_users")
+    .delete()
+    .eq("email", email.toLowerCase())
+  if (error) throw error
 }
 
 export async function getApprovedProjects() {
