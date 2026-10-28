@@ -16,6 +16,29 @@ import {
   type SubmissionRow,
 } from "./lib/archive"
 import { supabase } from "./lib/supabase"
+import {
+  BottomGradient,
+  BoxReveal,
+  OrbitDisplay,
+  Ripple,
+  SpotlightInput,
+  type OrbitIcon,
+} from "./components/ui/animated-sign-in"
+import { Icon } from "./components/ui/icon"
+import {
+  OnboardingDialog,
+  type OnboardingStep,
+} from "./components/ui/onboarding-dialog"
+import { Sidebar, SidebarLabel, SidebarLink, SidebarSection } from "./components/ui/sidebar"
+import {
+  DiscoverArt,
+  ExploreArt,
+  ReviewArt,
+  StatusArt,
+  SubmitArt,
+  UsersArt,
+  WelcomeArt,
+} from "./components/onboarding-art"
 
 type Role = "student" | "faculty" | "admin" | "guest"
 type View =
@@ -222,133 +245,6 @@ function toReviewItem(row: ReviewQueueRow): ReviewItem {
   }
 }
 
-function Icon({
-  name,
-  size = 18,
-  className = "",
-}: {
-  name: string
-  size?: number
-  className?: string
-}) {
-  const paths: Record<string, ReactNode> = {
-    plus: (
-      <>
-        <path d="M12 5v14M5 12h14" />
-      </>
-    ),
-    search: <circle cx="11" cy="11" r="7.5" />,
-    chevron: <path d="m8 10 4 4 4-4" />,
-    arrow: (
-      <>
-        <path d="M7 17 17 7" />
-        <path d="M8 7h9v9" />
-      </>
-    ),
-    users: (
-      <>
-        <path d="M16 20v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-        <circle cx="9" cy="7" r="4" />
-        <path d="M22 20v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
-      </>
-    ),
-    github: (
-      <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3.28-.36 6.72-1.61 6.72-7A5.48 5.48 0 0 0 19.27 3.7 5.15 5.15 0 0 0 19.13 0S18 0 15 1.48a13.38 13.38 0 0 0-7 0C5 0 3.87 0 3.87 0a5.15 5.15 0 0 0-.14 3.7 5.48 5.48 0 0 0-1.45 3.8c0 5.42 3.44 6.67 6.72 7A4.8 4.8 0 0 0 8 18v4" />
-    ),
-    refresh: (
-      <>
-        <path d="M20 11a8 8 0 1 0-2.34 5.66" />
-        <path d="M20 4v7h-7" />
-      </>
-    ),
-    folder: <path d="M3 5h6l2 2h10v12H3z" />,
-    clock: (
-      <>
-        <circle cx="12" cy="12" r="9" />
-        <path d="M12 7v5l3 2" />
-      </>
-    ),
-    check: <path d="m5 12 4 4L19 6" />,
-    edit: (
-      <>
-        <path d="M12 20h9" />
-        <path d="m16.5 3.5 4 4L8 20H4v-4z" />
-      </>
-    ),
-    archive: (
-      <>
-        <path d="M3 6h18v4H3zM5 10v10h14V10M10 14h4" />
-      </>
-    ),
-    mail: (
-      <>
-        <rect x="3" y="5" width="18" height="14" rx="2" />
-        <path d="m3 7 9 6 9-6" />
-      </>
-    ),
-    lock: (
-      <>
-        <rect x="4" y="10" width="16" height="11" rx="2" />
-        <path d="M8 10V7a4 4 0 0 1 8 0v3" />
-      </>
-    ),
-    cap: (
-      <>
-        <path d="m2 10 10-5 10 5-10 5z" />
-        <path d="M6 12.5V17c3 2.5 9 2.5 12 0v-4.5M22 10v6" />
-      </>
-    ),
-    book: (
-      <>
-        <path d="M4 5a3 3 0 0 1 3-3h5v18H7a3 3 0 0 0-3 3z" />
-        <path d="M20 5a3 3 0 0 0-3-3h-5v18h5a3 3 0 0 1 3 3z" />
-      </>
-    ),
-    user: (
-      <>
-        <circle cx="12" cy="8" r="4" />
-        <path d="M4 21a8 8 0 0 1 16 0" />
-      </>
-    ),
-    close: <path d="M6 6l12 12M18 6 6 18" />,
-    logout: (
-      <>
-        <path d="M10 17l5-5-5-5" />
-        <path d="M15 12H3" />
-        <path d="M12 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6" />
-      </>
-    ),
-  }
-
-  return (
-    <svg
-      aria-hidden="true"
-      className={className}
-      fill="none"
-      height={size}
-      viewBox="0 0 24 24"
-      width={size}
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="1.7"
-    >
-      {paths[name]}
-    </svg>
-  )
-}
-
-function Logo() {
-  return (
-    <div className="flex items-center gap-3">
-      <span className="grid size-9 place-items-center rounded bg-[#171a18] text-sm font-bold text-white">
-        D
-      </span>
-      <span className="text-lg font-bold tracking-tight">DEIMOS</span>
-    </div>
-  )
-}
-
 function Badge({
   children,
   tone = "neutral",
@@ -372,141 +268,202 @@ function Badge({
   )
 }
 
-function Header({
+function personFor(role: Role) {
+  return role === "student"
+    ? { name: "Sample Student", initials: "SS" }
+    : role === "faculty"
+      ? { name: "Dr. Elena Ruiz", initials: "ER" }
+      : role === "admin"
+        ? { name: "Archive admin", initials: "AD" }
+        : { name: "Guest visitor", initials: "G" }
+}
+
+function SidebarBrand() {
+  return (
+    <div className="flex h-12 shrink-0 items-center gap-3 px-1.5">
+      <img
+        src="/brand/ut-spartans-seal.png"
+        alt=""
+        className="size-10 shrink-0 rounded-full bg-white object-contain p-0.5"
+      />
+      <SidebarLabel className="leading-tight">
+        <strong className="block text-base tracking-tight">DEIMOS</strong>
+        <span className="block text-[10px] tracking-wide text-white/45">
+          THE UNIVERSITY OF TAMPA
+        </span>
+      </SidebarLabel>
+    </div>
+  )
+}
+
+function AppSidebar({
   role,
   view,
   onView,
   onSubmit,
   onSignOut,
+  onTour,
+  reviewCount,
+  actionCount,
 }: {
   role: Role
   view: View
   onView: (view: View) => void
   onSubmit: () => void
   onSignOut: () => void
+  onTour: () => void
+  reviewCount: number
+  actionCount: number
 }) {
-  const [menuOpen, setMenuOpen] = useState(false)
-  const person =
-    role === "student"
-      ? "Sample Student"
-      : role === "faculty"
-        ? "Dr. Elena Ruiz"
-        : role === "admin"
-          ? "Archive admin"
-          : "Guest visitor"
-  const links: NavigationLink[] =
+  const person = personFor(role)
+  const links: (NavigationLink & { icon: string; badge?: number })[] =
     role === "student"
       ? [
-          { label: "Projects", value: "projects" },
-          { label: "My submissions", value: "submissions" },
-          { label: "About the archive", value: "archive" },
+          { label: "Dashboard", value: "projects", icon: "home" },
+          {
+            label: "My submissions",
+            value: "submissions",
+            icon: "inbox",
+            badge: actionCount,
+          },
+          { label: "About the archive", value: "archive", icon: "archive" },
+          { label: "Profile", value: "profile", icon: "user" },
         ]
       : role === "guest"
         ? [
-            { label: "Projects", value: "projects" },
-            { label: "About the archive", value: "archive" },
+            { label: "Home", value: "projects", icon: "home" },
+            { label: "About the archive", value: "archive", icon: "archive" },
           ]
         : role === "admin"
           ? [
-              { label: "Projects", value: "projects" },
-              { label: "Authorized users", value: "users" },
-              { label: "Archive", value: "archive" },
+              { label: "Dashboard", value: "projects", icon: "home" },
+              { label: "Authorized users", value: "users", icon: "users" },
+              { label: "Archive", value: "archive", icon: "archive" },
+              { label: "Profile", value: "profile", icon: "user" },
             ]
-        : [
-            { label: "Projects", value: "projects" },
-            { label: "Review queue", value: "review" },
-            { label: "Archive", value: "archive" },
-          ]
+          : [
+              { label: "Dashboard", value: "projects", icon: "home" },
+              {
+                label: "Review queue",
+                value: "review",
+                icon: "inbox",
+                badge: reviewCount,
+              },
+              { label: "Archive", value: "archive", icon: "archive" },
+              { label: "Profile", value: "profile", icon: "user" },
+            ]
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[#d9d7d0] bg-[#fffefa]/95 backdrop-blur">
-      <div className="mx-auto flex h-20 max-w-[1450px] items-center gap-10 px-6 lg:px-14">
-        <button
-          onClick={() => onView("projects")}
-          className="shrink-0 cursor-pointer"
-        >
-          <Logo />
-        </button>
-        <nav className="hidden h-full items-center gap-8 md:flex">
+    <Sidebar
+      mobileBrand={
+        <div className="flex items-center gap-3">
+          <img
+            src="/brand/ut-spartans-seal.png"
+            alt=""
+            className="size-9 rounded-full bg-white object-contain p-0.5"
+          />
+          <strong className="tracking-tight">DEIMOS</strong>
+        </div>
+      }
+    >
+      <SidebarBrand />
+      {role === "student" && (
+        <div className="mt-6">
+          <SidebarLink
+            variant="primary"
+            label="Submit project"
+            icon={<Icon name="plus" size={20} />}
+            onClick={onSubmit}
+          />
+        </div>
+      )}
+      <nav className="mt-6 flex-1 overflow-y-auto overflow-x-hidden">
+        <SidebarSection title="Menu">
           {links.map((link) => (
-            <button
+            <SidebarLink
               key={link.value}
+              label={link.label}
+              icon={<Icon name={link.icon} size={20} />}
+              active={view === link.value}
+              badge={link.badge}
               onClick={() => onView(link.value)}
-              className={`h-full cursor-pointer border-b-2 text-sm transition ${
-                view === link.value
-                  ? "border-[#a92d35] font-semibold text-[#171a18]"
-                  : "border-transparent text-[#686a66] hover:text-[#171a18]"
-              }`}
-            >
-              {link.label}
-            </button>
+            />
           ))}
-        </nav>
-        <div className="ml-auto flex items-center gap-5">
-          {role === "student" && (
-            <button
-              onClick={onSubmit}
-              className="hidden cursor-pointer items-center gap-2 rounded bg-[#a92d35] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#8f252d] sm:flex"
-            >
-              <Icon name="plus" size={17} />
-              Submit project
-            </button>
-          )}
-          {role === "faculty" && view === "review" && (
-            <Badge tone="red">{reviewItems.length} awaiting review</Badge>
-          )}
-          <div className="relative">
-            <button
-              aria-expanded={menuOpen}
-              onClick={() => setMenuOpen((open) => !open)}
-              className="flex cursor-pointer items-center gap-3 text-left"
-            >
-              <span className="grid size-10 place-items-center rounded-full border border-[#a92d35] bg-[#f7efed] text-sm font-bold text-[#a92d35]">
-                {role === "student"
-                  ? "SS"
-                  : role === "faculty"
-                    ? "ER"
-                    : role === "admin"
-                      ? "AD"
-                      : "G"}
-              </span>
-              <span className="hidden leading-tight lg:block">
-                <strong className="block text-sm">{person}</strong>
-                <span className="text-xs capitalize text-[#6b6d69]">
-                  {role}
-                </span>
-              </span>
-              <Icon name="chevron" size={16} />
-            </button>
-            {menuOpen && (
-              <div className="absolute right-0 top-14 w-64 rounded-lg border border-[#d9d7d0] bg-[#fffefa] p-2 shadow-xl">
-                <button
-                  onClick={() => {
-                    onView("profile")
-                    setMenuOpen(false)
-                  }}
-                  className="flex w-full cursor-pointer items-center gap-3 rounded px-3 py-3 text-sm hover:bg-[#f2efe8]"
-                >
-                  <Icon name="user" /> View profile
-                </button>
-                <button
-                  onClick={() => {
-                    setMenuOpen(false)
-                    onSignOut()
-                  }}
-                  className="flex w-full cursor-pointer items-center gap-3 rounded px-3 py-3 text-left text-sm hover:bg-[#f2efe8]"
-                >
-                  <Icon name="logout" />
-                  Sign out
-                </button>
-              </div>
-            )}
-          </div>
+        </SidebarSection>
+      </nav>
+      <div className="flex flex-col gap-1 border-t border-white/10 pt-3">
+        <SidebarLink
+          label="Take the tour"
+          icon={<Icon name="help" size={20} />}
+          onClick={onTour}
+        />
+        <SidebarLink
+          label="Sign out"
+          icon={<Icon name="logout" size={20} />}
+          onClick={onSignOut}
+        />
+        <div className="mt-2 flex h-12 items-center gap-3 px-1.5">
+          <span className="grid size-10 shrink-0 place-items-center rounded-full bg-[#a92d35] text-sm font-bold text-white ring-2 ring-white/10">
+            {person.initials}
+          </span>
+          <SidebarLabel className="leading-tight">
+            <strong className="block text-sm">{person.name}</strong>
+            <span className="block text-xs capitalize text-white/45">
+              {role}
+            </span>
+          </SidebarLabel>
         </div>
       </div>
-    </header>
+    </Sidebar>
   )
 }
+
+const categoryTheme: Record<
+  string,
+  { icon: string; soft: string; accent: string }
+> = {
+  "AI / Machine Learning": {
+    icon: "spark",
+    soft: "bg-[#e7efeb] text-[#2f6b55]",
+    accent: "#2f6b55",
+  },
+  "Mobile Application": {
+    icon: "phone",
+    soft: "bg-[#e8eff3] text-[#355f72]",
+    accent: "#355f72",
+  },
+  Cybersecurity: {
+    icon: "shield",
+    soft: "bg-[#f4e6e6] text-[#a92d35]",
+    accent: "#a92d35",
+  },
+  "Web Application": {
+    icon: "globe",
+    soft: "bg-[#f2efdf] text-[#866420]",
+    accent: "#866420",
+  },
+  "Hardware / Embedded Systems": {
+    icon: "chip",
+    soft: "bg-[#ece9f1] text-[#5b4a86]",
+    accent: "#5b4a86",
+  },
+}
+
+const themeFor = (category: string) =>
+  categoryTheme[category] ?? {
+    icon: "folder",
+    soft: "bg-[#efeee8] text-[#343735]",
+    accent: "#343735",
+  }
+
+const initialsOf = (name: string) =>
+  name
+    .split(" ")
+    .filter(Boolean)
+    .map((part) => part[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase()
 
 function ProjectCard({
   project,
@@ -517,70 +474,631 @@ function ProjectCard({
   onOpen: () => void
   faculty: boolean
 }) {
-  const colors: Record<string, string> = {
-    "AI / Machine Learning": "bg-[#e7efeb]",
-    "Mobile Application": "bg-[#e8eff3]",
-    Cybersecurity: "bg-[#f1e8e8]",
-    "Web Application": "bg-[#f2efdf]",
-    "Hardware / Embedded Systems": "bg-[#ece9f1]",
-  }
+  const theme = themeFor(project.category)
+  const members = project.team
+    .split(",")
+    .map((member) => member.trim())
+    .filter(Boolean)
   return (
-    <article className="flex min-h-72 flex-col overflow-hidden rounded-lg border border-[#d9d7d0] bg-[#fffefa] shadow-[0_3px_12px_rgba(24,26,24,0.04)] transition hover:-translate-y-0.5 hover:shadow-lg">
-      {project.cardImageUrl && (
-        <img
-          src={project.cardImageUrl}
-          alt={`${project.title} cover`}
-          className="h-48 w-full object-cover"
-        />
-      )}
-      <div className="flex flex-1 flex-col p-6">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex flex-wrap items-center gap-2">
-          <span
-            className={`rounded px-2 py-1 text-xs font-semibold ${colors[project.category]}`}
+    <article className="group flex flex-col overflow-hidden rounded-2xl border border-[#e2dfd8] bg-[#fffefa] shadow-[0_1px_2px_rgba(24,26,24,0.04)] transition duration-300 hover:-translate-y-1 hover:border-[#d0ccc3] hover:shadow-[0_18px_40px_rgba(24,26,24,0.10)]">
+      <div className="relative h-32 overflow-hidden">
+        {project.cardImageUrl ? (
+          <img
+            src={project.cardImageUrl}
+            alt={`${project.title} cover`}
+            className="size-full object-cover transition duration-500 group-hover:scale-105"
+          />
+        ) : (
+          <div
+            className={`relative size-full ${theme.soft}`}
+            style={{
+              backgroundImage: `radial-gradient(${theme.accent}22 1.2px, transparent 1.2px)`,
+              backgroundSize: "14px 14px",
+            }}
           >
-            {project.category}
-          </span>
-          <span className="text-xs text-[#777873]">
-            {project.term} {project.year}
+            <span className="absolute -bottom-5 -right-3 opacity-[0.16] transition duration-500 group-hover:-rotate-6 group-hover:scale-110">
+              <Icon name={theme.icon} size={120} />
+            </span>
+            <span className="absolute left-5 top-1/2 grid size-12 -translate-y-1/2 place-items-center rounded-xl bg-white/80 shadow-sm backdrop-blur">
+              <Icon name={theme.icon} size={24} />
+            </span>
+          </div>
+        )}
+        <span className="absolute right-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-semibold text-[#343735] shadow-sm backdrop-blur">
+          {project.term} {project.year}
+        </span>
+      </div>
+
+      <div className="flex flex-1 flex-col p-5">
+        <span
+          className={`w-fit rounded-full px-2.5 py-1 text-[11px] font-semibold ${theme.soft}`}
+        >
+          {project.category}
+        </span>
+        <h3 className="mt-3 line-clamp-2 text-lg font-bold leading-snug tracking-tight">
+          {project.title}
+        </h3>
+        <p className="mt-2 line-clamp-3 flex-1 text-sm leading-6 text-[#70716d]">
+          {project.description}
+        </p>
+
+        <div className="mt-4 flex items-center gap-3">
+          <div className="flex -space-x-2">
+            {members.slice(0, 3).map((member, index) => (
+              <span
+                key={member}
+                title={member}
+                className="grid size-7 place-items-center rounded-full border-2 border-[#fffefa] text-[10px] font-bold text-white"
+                style={{
+                  background: ["#171a18", "#a92d35", "#5c5f5b"][index % 3],
+                }}
+              >
+                {initialsOf(member)}
+              </span>
+            ))}
+          </div>
+          <span className="truncate text-xs text-[#5b5d59]">
+            {project.team}
           </span>
         </div>
-        <button
-          onClick={onOpen}
-          className="flex shrink-0 cursor-pointer items-center gap-2 text-sm font-semibold text-[#a92d35] hover:underline"
-        >
-          {faculty ? "Edit project" : "Open details"}{" "}
-          <Icon name={faculty ? "edit" : "arrow"} size={15} />
-        </button>
-      </div>
-      <h3 className="mt-3 text-xl font-bold leading-tight tracking-tight">
-        {project.title}
-      </h3>
-      <p className="mt-4 flex-1 text-[15px] leading-6 text-[#70716d]">
-        {project.description}
-      </p>
-      <div className="mt-5 border-t border-[#dfddd6] pt-4">
-        <p className="flex items-center gap-2 text-sm">
-          <Icon name="users" size={17} /> {project.team}
-        </p>
-        <div className="mt-4 flex flex-wrap items-center gap-2">
+
+        <div className="mt-4 flex flex-wrap gap-1.5">
           {project.tags.map((tag) => (
             <span
               key={tag}
-              className="rounded border border-[#d5d3cd] px-2 py-1 text-xs text-[#72736f]"
+              className="rounded-md bg-[#f1efe9] px-2 py-1 text-[11px] font-medium text-[#5b5d59]"
             >
               {tag}
             </span>
           ))}
-          <span className="ml-auto flex items-center gap-2 text-xs text-[#347153]">
-            <Icon name="github" size={17} />
-            <i className="size-1.5 rounded-full bg-[#39775a]" />
+        </div>
+
+        <div className="mt-5 flex items-center justify-between border-t border-[#ebe8e1] pt-4">
+          <span className="flex items-center gap-1.5 text-xs text-[#347153]">
+            <Icon name="github" size={15} />
             {project.access}
           </span>
+          <button
+            onClick={onOpen}
+            className="flex cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-semibold text-[#a92d35] transition hover:bg-[#f8eeee]"
+          >
+            {faculty ? "Edit" : "Open"}
+            <Icon name={faculty ? "edit" : "arrowRight"} size={15} />
+          </button>
         </div>
       </div>
-      </div>
     </article>
+  )
+}
+
+function StatTile({
+  label,
+  value,
+  detail,
+  icon,
+}: {
+  label: string
+  value: string | number
+  detail: string
+  icon: string
+}) {
+  return (
+    <div className="rounded-2xl border border-[#e2dfd8] bg-[#fffefa] p-5">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium text-[#71726e]">{label}</span>
+        <span className="grid size-8 place-items-center rounded-lg bg-[#f4f1ea] text-[#a92d35]">
+          <Icon name={icon} size={16} />
+        </span>
+      </div>
+      <strong className="mt-3 block text-3xl font-semibold tracking-tight">
+        {value}
+      </strong>
+      <span className="mt-0.5 block text-xs text-[#8a8b86]">{detail}</span>
+    </div>
+  )
+}
+
+const statusStyle: Record<
+  SubmissionStatus,
+  { tone: string; step: number }
+> = {
+  "In review": { tone: "bg-[#f5edda] text-[#866420]", step: 2 },
+  "Changes requested": { tone: "bg-[#f8e9e9] text-[#a92d35]", step: 2 },
+  Approved: { tone: "bg-[#e8f1ea] text-[#347153]", step: 3 },
+  Rejected: { tone: "bg-[#efeee8] text-[#5b5d59]", step: 2 },
+  Archived: { tone: "bg-[#efeee8] text-[#5b5d59]", step: 3 },
+}
+
+type HomeAction = { label: string; icon: string; onClick: () => void }
+type HomeStep = {
+  key: string
+  label: string
+  done: boolean
+  action: () => void
+}
+type HomeHelpers = {
+  trending: string[]
+  onPickTech: (tech: string) => void
+  scrollToExplore: () => void
+}
+
+const PAGE = "mx-auto max-w-[1360px] px-5 py-8 sm:px-8 lg:px-12 lg:py-10"
+
+function greetingNow() {
+  const hour = new Date().getHours()
+  return hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening"
+}
+
+function PageHeader({
+  eyebrow,
+  title,
+  description,
+  action,
+}: {
+  eyebrow: string
+  title: string
+  description: string
+  action?: ReactNode
+}) {
+  return (
+    <div className="flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#a92d35]">
+          {eyebrow}
+        </p>
+        <h1 className="mt-3 text-3xl font-semibold tracking-tight md:text-4xl">
+          {title}
+        </h1>
+        <p className="mt-2 max-w-2xl text-[#71726e]">{description}</p>
+      </div>
+      {action}
+    </div>
+  )
+}
+
+function HomeCard({
+  title,
+  link,
+  children,
+}: {
+  title: string
+  link?: { label: string; onClick: () => void }
+  children: ReactNode
+}) {
+  return (
+    <div className="flex flex-col rounded-3xl border border-[#e2dfd8] bg-[#fffefa] p-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-base font-semibold">{title}</h2>
+        {link && (
+          <button
+            onClick={link.onClick}
+            className="flex cursor-pointer items-center gap-1 text-xs font-semibold text-[#a92d35] hover:underline"
+          >
+            {link.label} <Icon name="arrowRight" size={13} />
+          </button>
+        )}
+      </div>
+      {children}
+    </div>
+  )
+}
+
+function EmptyNote({
+  icon,
+  title,
+  detail,
+}: {
+  icon: string
+  title: string
+  detail: string
+}) {
+  return (
+    <div className="flex flex-1 flex-col items-center justify-center py-6 text-center">
+      <span className="grid size-12 place-items-center rounded-2xl bg-[#f4f1ea] text-[#a92d35]">
+        <Icon name={icon} size={22} />
+      </span>
+      <p className="mt-3 text-sm font-semibold">{title}</p>
+      <p className="mt-1 text-xs text-[#71726e]">{detail}</p>
+    </div>
+  )
+}
+
+function RoleHome({
+  eyebrow,
+  title,
+  subtitle,
+  primary,
+  secondary,
+  trending,
+  onPickTech,
+  side,
+  steps,
+  checklistHidden,
+  onDismissChecklist,
+}: {
+  eyebrow: string
+  title: string
+  subtitle: string
+  primary: HomeAction
+  secondary: HomeAction
+  trending: string[]
+  onPickTech: (tech: string) => void
+  side: ReactNode
+  steps: HomeStep[]
+  checklistHidden: boolean
+  onDismissChecklist: () => void
+}) {
+  const doneCount = steps.filter((step) => step.done).length
+  return (
+    <section className="grid gap-4 xl:grid-cols-[1.55fr_1fr]">
+      <div className="relative flex flex-col overflow-hidden rounded-3xl bg-[#171a18] p-7 text-white sm:p-9">
+        <div className="pointer-events-none absolute -right-16 top-1/2 hidden size-[340px] -translate-y-1/2 sm:block">
+          {[180, 250, 320].map((size, i) => (
+            <span
+              key={size}
+              className="deimos-ripple absolute left-1/2 top-1/2 rounded-full border border-white/10"
+              style={{ width: size, height: size, animationDelay: `${i * 0.15}s` }}
+            />
+          ))}
+          <img
+            src="/brand/ut-spartans-seal.png"
+            alt=""
+            className="deimos-float absolute left-1/2 top-1/2 size-[130px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-white object-contain p-1 shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
+          />
+        </div>
+        <div className="relative max-w-md">
+          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#e0414c]">
+            {eyebrow}
+          </p>
+          <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
+            {title}
+          </h1>
+          <p className="mt-3 text-sm leading-6 text-white/60">{subtitle}</p>
+          <div className="mt-6 flex flex-wrap gap-2">
+            <button
+              onClick={primary.onClick}
+              className="flex cursor-pointer items-center gap-2 rounded-xl bg-[#a92d35] px-5 py-3 text-sm font-semibold shadow-[0_8px_20px_rgba(169,45,53,0.4)] transition hover:bg-[#c0353f]"
+            >
+              <Icon name={primary.icon} size={17} /> {primary.label}
+            </button>
+            <button
+              onClick={secondary.onClick}
+              className="flex cursor-pointer items-center gap-2 rounded-xl bg-white/10 px-5 py-3 text-sm font-semibold transition hover:bg-white/15"
+            >
+              <Icon name={secondary.icon} size={17} /> {secondary.label}
+            </button>
+          </div>
+        </div>
+        {trending.length > 0 && (
+          <div className="relative mt-8 border-t border-white/10 pt-5 xl:mt-auto">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/40">
+              Trending in the archive
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {trending.map((tag) => (
+                <button
+                  key={tag}
+                  onClick={() => onPickTech(tag)}
+                  className="cursor-pointer rounded-full border border-white/15 px-3 py-1 text-xs font-medium text-white/75 transition hover:border-[#e0414c] hover:bg-[#e0414c]/15 hover:text-white"
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {side}
+
+      {!checklistHidden && doneCount < steps.length && (
+        <div className="rounded-3xl border border-[#e2dfd8] bg-[#fffefa] p-5 xl:col-span-2">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center">
+            <div className="md:w-64">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-semibold">Getting started</p>
+                <button
+                  onClick={onDismissChecklist}
+                  className="cursor-pointer text-xs font-semibold text-[#8a8b86] hover:text-[#171a18] md:hidden"
+                >
+                  Hide
+                </button>
+              </div>
+              <div className="mt-2 flex items-center gap-3">
+                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#ebe8e1]">
+                  <div
+                    className="h-full rounded-full bg-[#a92d35] transition-[width] duration-500"
+                    style={{ width: `${(doneCount / steps.length) * 100}%` }}
+                  />
+                </div>
+                <span className="text-xs text-[#71726e]">
+                  {doneCount}/{steps.length}
+                </span>
+              </div>
+            </div>
+            <div
+              className={`grid flex-1 gap-2 ${
+                steps.length === 2 ? "sm:grid-cols-2" : "sm:grid-cols-3"
+              }`}
+            >
+              {steps.map((step) => (
+                <button
+                  key={step.key}
+                  onClick={step.action}
+                  disabled={step.done}
+                  className={`flex cursor-pointer items-center gap-3 rounded-xl border px-3 py-2.5 text-left text-sm transition disabled:cursor-default ${
+                    step.done
+                      ? "border-transparent bg-[#f4f1ea] text-[#8a8b86] line-through"
+                      : "border-[#e2dfd8] hover:border-[#a92d35] hover:bg-[#fbf6f5]"
+                  }`}
+                >
+                  <span
+                    className={`grid size-5 shrink-0 place-items-center rounded-full border ${
+                      step.done
+                        ? "border-[#347153] bg-[#347153] text-white"
+                        : "border-[#b9b7b0]"
+                    }`}
+                  >
+                    {step.done && <Icon name="check" size={12} />}
+                  </span>
+                  {step.label}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={onDismissChecklist}
+              aria-label="Hide the Getting started checklist"
+              title="Hide checklist"
+              className="hidden size-9 shrink-0 cursor-pointer place-items-center rounded-lg text-[#8a8b86] transition hover:bg-[#f4f1ea] hover:text-[#171a18] md:grid"
+            >
+              <Icon name="close" size={16} />
+            </button>
+          </div>
+        </div>
+      )}
+    </section>
+  )
+}
+
+function SubmissionProgress({ status }: { status: SubmissionStatus }) {
+  const style = statusStyle[status]
+  return (
+    <div className="grid grid-cols-3 gap-1">
+      {[1, 2, 3].map((segment) => (
+        <span
+          key={segment}
+          className={`h-1 rounded-full ${
+            segment <= style.step
+              ? status === "Changes requested" && segment === style.step
+                ? "bg-[#e0414c]"
+                : "bg-[#171a18]"
+              : "bg-[#e5e2db]"
+          }`}
+        />
+      ))}
+    </div>
+  )
+}
+
+function StudentSideCard({
+  submissions,
+  onViewAll,
+}: {
+  submissions: SubmissionItem[]
+  onViewAll: () => void
+}) {
+  return (
+    <HomeCard title="Your submissions" link={{ label: "View all", onClick: onViewAll }}>
+      {submissions.length === 0 ? (
+        <EmptyNote
+          icon="upload"
+          title="No submissions yet"
+          detail="Your capstone will show up here once you submit it."
+        />
+      ) : (
+        <ul className="mt-4 space-y-3">
+          {submissions.slice(0, 3).map((item) => (
+            <li
+              key={item.id ?? item.title}
+              className="rounded-xl border border-[#ebe8e1] p-3"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <strong className="truncate text-sm">{item.title}</strong>
+                <span
+                  className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${statusStyle[item.status].tone}`}
+                >
+                  {item.status}
+                </span>
+              </div>
+              <div className="mt-2.5">
+                <SubmissionProgress status={item.status} />
+              </div>
+              <p className="mt-2 truncate text-xs text-[#71726e]">{item.note}</p>
+            </li>
+          ))}
+        </ul>
+      )}
+    </HomeCard>
+  )
+}
+
+function FacultySideCard({
+  items,
+  onOpenQueue,
+}: {
+  items: ReviewItem[]
+  onOpenQueue: () => void
+}) {
+  return (
+    <HomeCard
+      title="Waiting for your review"
+      link={{ label: "Open queue", onClick: onOpenQueue }}
+    >
+      {items.length === 0 ? (
+        <EmptyNote
+          icon="check"
+          title="You're all caught up"
+          detail="New student submissions will appear here."
+        />
+      ) : (
+        <ul className="mt-4 space-y-3">
+          {items.slice(0, 3).map((item) => (
+            <li key={item.id}>
+              <button
+                onClick={onOpenQueue}
+                className="flex w-full cursor-pointer items-center gap-3 rounded-xl border border-[#ebe8e1] p-3 text-left transition hover:border-[#a92d35] hover:bg-[#fbf6f5]"
+              >
+                <span className="grid size-9 shrink-0 place-items-center rounded-full bg-[#171a18] text-xs font-bold text-white">
+                  {initialsOf(item.student)}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <strong className="block truncate text-sm">{item.project}</strong>
+                  <span className="block truncate text-xs text-[#71726e]">
+                    {item.student} · {item.submitted}
+                  </span>
+                </span>
+                <span
+                  className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                    item.status === "changes_requested"
+                      ? "bg-[#f8e9e9] text-[#a92d35]"
+                      : "bg-[#f5edda] text-[#866420]"
+                  }`}
+                >
+                  {item.status === "changes_requested" ? "Changes" : "New"}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </HomeCard>
+  )
+}
+
+function AdminSideCard({
+  onUsers,
+  onExplore,
+  onTour,
+}: {
+  onUsers: () => void
+  onExplore: () => void
+  onTour: () => void
+}) {
+  const actions = [
+    {
+      icon: "users",
+      title: "Authorize a new user",
+      detail: "Give a student, faculty member or admin access.",
+      onClick: onUsers,
+    },
+    {
+      icon: "shield",
+      title: "Review who has access",
+      detail: "Change roles or remove access on the access list.",
+      onClick: onUsers,
+    },
+    {
+      icon: "grid",
+      title: "Browse the archive",
+      detail: "See what guests and students can view.",
+      onClick: onExplore,
+    },
+    {
+      icon: "help",
+      title: "Replay the admin tour",
+      detail: "A quick refresher on admin tools.",
+      onClick: onTour,
+    },
+  ]
+  return (
+    <HomeCard title="Quick actions">
+      <ul className="mt-4 space-y-2">
+        {actions.map((action) => (
+          <li key={action.title}>
+            <button
+              onClick={action.onClick}
+              className="group flex w-full cursor-pointer items-center gap-3 rounded-xl border border-[#ebe8e1] p-3 text-left transition hover:border-[#a92d35] hover:bg-[#fbf6f5]"
+            >
+              <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-[#f4f1ea] text-[#a92d35]">
+                <Icon name={action.icon} size={17} />
+              </span>
+              <span className="min-w-0 flex-1">
+                <strong className="block text-sm">{action.title}</strong>
+                <span className="block truncate text-xs text-[#71726e]">
+                  {action.detail}
+                </span>
+              </span>
+              <Icon
+                name="arrowRight"
+                size={15}
+                className="text-[#b9b7b0] transition group-hover:translate-x-0.5 group-hover:text-[#a92d35]"
+              />
+            </button>
+          </li>
+        ))}
+      </ul>
+    </HomeCard>
+  )
+}
+
+function GuestSideCard({
+  project,
+  onOpen,
+  onSignIn,
+}: {
+  project?: Project
+  onOpen: (project: Project) => void
+  onSignIn: () => void
+}) {
+  const theme = project ? themeFor(project.category) : null
+  return (
+    <HomeCard title="Featured capstone">
+      {project && theme ? (
+        <div className="mt-4 flex flex-1 flex-col">
+          <div
+            className={`relative h-24 overflow-hidden rounded-xl ${theme.soft}`}
+            style={{
+              backgroundImage: `radial-gradient(${theme.accent}22 1.2px, transparent 1.2px)`,
+              backgroundSize: "14px 14px",
+            }}
+          >
+            <span className="absolute -bottom-4 -right-2 opacity-[0.16]">
+              <Icon name={theme.icon} size={96} />
+            </span>
+            <span className="absolute left-4 top-1/2 grid size-10 -translate-y-1/2 place-items-center rounded-xl bg-white/80 shadow-sm">
+              <Icon name={theme.icon} size={20} />
+            </span>
+          </div>
+          <p className="mt-3 text-[11px] font-semibold text-[#71726e]">
+            {project.category} · {project.term} {project.year}
+          </p>
+          <strong className="mt-1 text-base leading-snug">{project.title}</strong>
+          <p className="mt-1 line-clamp-2 text-xs leading-5 text-[#71726e]">
+            {project.description}
+          </p>
+          <div className="mt-auto flex gap-2 pt-4">
+            <button
+              onClick={() => onOpen(project)}
+              className="flex-1 cursor-pointer rounded-xl bg-[#171a18] py-2.5 text-sm font-semibold text-white hover:bg-black"
+            >
+              Open project
+            </button>
+            <button
+              onClick={onSignIn}
+              className="flex-1 cursor-pointer rounded-xl border border-[#e2dfd8] py-2.5 text-sm font-semibold hover:bg-[#f4f1ea]"
+            >
+              Sign in
+            </button>
+          </div>
+        </div>
+      ) : (
+        <EmptyNote
+          icon="folder"
+          title="No approved projects yet"
+          detail="Approved capstones will appear here."
+        />
+      )}
+    </HomeCard>
   )
 }
 
@@ -589,206 +1107,376 @@ function ProjectsView({
   projects: archiveProjects,
   loadError,
   onOpen,
+  home,
 }: {
   role: Role
   projects: Project[]
   loadError: string
   onOpen: (project: Project) => void
+  home?: (helpers: HomeHelpers) => ReactNode
 }) {
   const [query, setQuery] = useState("")
-  const [category, setCategory] = useState("All categories")
+  const [category, setCategory] = useState("All")
   const [year, setYear] = useState("All years")
+  const [tech, setTech] = useState("All technologies")
+
+  const technologies = useMemo(
+    () =>
+      [...new Set(archiveProjects.flatMap((project) => project.tags))].sort(
+        (a, b) => a.localeCompare(b),
+      ),
+    [archiveProjects],
+  )
+  const trending = useMemo(() => {
+    const counts = new Map<string, number>()
+    archiveProjects.forEach((project) =>
+      project.tags.forEach((tag) => counts.set(tag, (counts.get(tag) ?? 0) + 1)),
+    )
+    return [...counts.entries()]
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .slice(0, 6)
+      .map(([tag]) => tag)
+  }, [archiveProjects])
+  const allYears = useMemo(
+    () =>
+      [...new Set(archiveProjects.map((project) => project.year))].sort(
+        (a, b) => b - a,
+      ),
+    [archiveProjects],
+  )
+  const categories = useMemo(() => {
+    const counts = new Map<string, number>()
+    archiveProjects.forEach((project) =>
+      counts.set(project.category, (counts.get(project.category) ?? 0) + 1),
+    )
+    return [...counts.entries()]
+  }, [archiveProjects])
 
   const filtered = useMemo(
     () =>
       archiveProjects.filter(
         (project) =>
           (!query ||
-            `${project.title} ${project.team} ${project.tags.join(" ")}`
+            `${project.title} ${project.team} ${project.description} ${project.tags.join(" ")}`
               .toLowerCase()
               .includes(query.toLowerCase())) &&
-          (category === "All categories" || project.category === category) &&
+          (category === "All" || project.category === category) &&
+          (tech === "All technologies" || project.tags.includes(tech)) &&
           (year === "All years" || String(project.year) === year),
       ),
-    [archiveProjects, query, category, year],
+    [archiveProjects, query, category, tech, year],
   )
 
   const years = [...new Set(filtered.map((project) => project.year))].sort(
     (a, b) => b - a,
   )
+  const filtersActive =
+    query !== "" ||
+    category !== "All" ||
+    tech !== "All technologies" ||
+    year !== "All years"
+  const clearFilters = () => {
+    setQuery("")
+    setCategory("All")
+    setTech("All technologies")
+    setYear("All years")
+  }
+  const scrollToExplore = () =>
+    document
+      .getElementById("explore")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" })
+
   return (
-    <main className="mx-auto max-w-[1450px] px-6 py-12 lg:px-14 lg:py-14">
-      <div className="flex items-end justify-between gap-4">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-wide text-[#a92d35]">
-            Capstone archive
-          </p>
-          <h1 className="mt-3 text-4xl font-medium tracking-tight md:text-5xl">
-            {role !== "faculty"
-              ? "Explore approved projects"
-              : "Project archive"}
-          </h1>
-          <p className="mt-3 text-[#71726e]">
-            {role !== "faculty"
-              ? "Discover teams, technologies, and ideas from across the University of Tampa."
-              : "Browse, maintain, and curate approved capstone records."}
-          </p>
-        </div>
-        <p className="hidden text-sm text-[#71726e] md:block">
-          {filtered.length} approved projects
-        </p>
+    <main className="mx-auto max-w-[1360px] px-5 py-8 sm:px-8 lg:px-12 lg:py-10">
+      {home ? (
+        home({
+          trending,
+          onPickTech: (tag) => {
+            setTech(tag)
+            scrollToExplore()
+          },
+          scrollToExplore,
+        })
+      ) : (
+        <PageHeader
+          eyebrow="Capstone archive"
+          title="Explore approved projects"
+          description="Discover teams, technologies, and ideas from across the University of Tampa."
+        />
+      )}
+
+      <div className="mt-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <StatTile
+          label="Approved projects"
+          value={archiveProjects.length}
+          detail="In the public archive"
+          icon="folder"
+        />
+        <StatTile
+          label="Technologies"
+          value={technologies.length}
+          detail="Languages, frameworks & tools"
+          icon="chip"
+        />
+        <StatTile
+          label="Academic years"
+          value={allYears.length}
+          detail={
+            allYears.length
+              ? `${allYears[allYears.length - 1]} – ${allYears[0]}`
+              : "No projects yet"
+          }
+          icon="clock"
+        />
+        <StatTile
+          label="Project types"
+          value={categories.length}
+          detail="From AI to embedded systems"
+          icon="grid"
+        />
       </div>
 
-      <section className="mt-9 rounded-lg border border-[#d9d7d0] bg-[#fffefa] p-6 shadow-sm">
-        <div className="grid gap-4 lg:grid-cols-[1.5fr_1fr_0.9fr_0.7fr_auto]">
-          <label className="block">
-            <span className="mb-2 block text-xs font-medium text-[#5b5d59]">
-              Keywords
-            </span>
-            <span className="flex items-center gap-3 rounded border border-[#d6d4ce] px-3">
-              <Icon name="search" />
+      <section id="explore" className="mt-12 scroll-mt-24">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#a92d35]">
+              Capstone archive
+            </p>
+            <h2 className="mt-2 text-2xl font-semibold tracking-tight md:text-3xl">
+              {role === "faculty" ? "Curate the archive" : "Explore approved projects"}
+            </h2>
+          </div>
+          <p className="text-sm text-[#71726e]">
+            Showing {filtered.length} of {archiveProjects.length}
+          </p>
+        </div>
+
+        <div className="sticky top-16 z-30 mt-5 rounded-2xl border border-[#e2dfd8] bg-[#fffefa]/95 p-3 shadow-[0_8px_24px_rgba(24,26,24,0.06)] backdrop-blur lg:top-4">
+          <div className="flex flex-col gap-2 md:flex-row">
+            <label className="flex h-12 flex-1 items-center gap-3 rounded-xl bg-[#f4f1ea] px-4 transition focus-within:bg-white focus-within:shadow-[0_0_0_2px_#a92d35]">
+              <Icon name="search" className="text-[#777873]" />
+              <span className="sr-only">Search projects</span>
               <input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                className="h-12 w-full bg-transparent text-sm outline-none placeholder:text-[#777873]"
-                placeholder="Search titles, teams, or topics"
+                className="h-full w-full bg-transparent text-sm outline-none placeholder:text-[#8a8b86] focus-visible:outline-none"
+                placeholder="Search titles, teams, topics, or technologies"
               />
-            </span>
-          </label>
-          <label className="block">
-            <span className="mb-2 block text-xs font-medium text-[#5b5d59]">
-              Technologies & languages
-            </span>
-            <select className="h-12 w-full rounded border border-[#d6d4ce] bg-transparent px-3 text-sm">
-              <option>All technologies</option>
-              <option>React</option>
-              <option>Python</option>
-              <option>Swift</option>
-            </select>
-          </label>
-          <label className="block">
-            <span className="mb-2 block text-xs font-medium text-[#5b5d59]">
-              Project type
-            </span>
-            <select
-              value={category}
-              onChange={(event) => setCategory(event.target.value)}
-              className="h-12 w-full rounded border border-[#d6d4ce] bg-transparent px-3 text-sm"
-            >
-              <option>All categories</option>
-              {[
-                ...new Set(archiveProjects.map((project) => project.category)),
-              ].map((item) => (
-                <option key={item}>{item}</option>
-              ))}
-            </select>
-          </label>
-          <label className="block">
-            <span className="mb-2 block text-xs font-medium text-[#5b5d59]">
-              Academic year
-            </span>
-            <select
-              value={year}
-              onChange={(event) => setYear(event.target.value)}
-              className="h-12 w-full rounded border border-[#d6d4ce] bg-transparent px-3 text-sm"
-            >
-              <option>All years</option>
-              <option>2026</option>
-              <option>2025</option>
-            </select>
-          </label>
-          <button className="mt-auto h-12 cursor-pointer rounded bg-[#171a18] px-8 text-sm font-semibold text-white hover:bg-black">
-            Search
-          </button>
+              {query && (
+                <button
+                  onClick={() => setQuery("")}
+                  aria-label="Clear search"
+                  className="cursor-pointer text-[#8a8b86] hover:text-[#171a18]"
+                >
+                  <Icon name="close" size={16} />
+                </button>
+              )}
+            </label>
+            <div className="grid grid-cols-2 gap-2 md:flex">
+              <select
+                aria-label="Technology"
+                value={tech}
+                onChange={(event) => setTech(event.target.value)}
+                className="h-12 cursor-pointer rounded-xl border border-[#e2dfd8] bg-white px-3 text-sm md:w-48"
+              >
+                <option>All technologies</option>
+                {technologies.map((item) => (
+                  <option key={item}>{item}</option>
+                ))}
+              </select>
+              <select
+                aria-label="Academic year"
+                value={year}
+                onChange={(event) => setYear(event.target.value)}
+                className="h-12 cursor-pointer rounded-xl border border-[#e2dfd8] bg-white px-3 text-sm md:w-36"
+              >
+                <option>All years</option>
+                {allYears.map((item) => (
+                  <option key={item}>{item}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="mt-3 flex items-center gap-2">
+            <div className="flex flex-1 gap-2 overflow-x-auto pb-0.5">
+              {[["All", archiveProjects.length] as [string, number], ...categories].map(
+                ([item, count]) => {
+                  const active = category === item
+                  return (
+                    <button
+                      key={item}
+                      onClick={() => setCategory(item)}
+                      aria-pressed={active}
+                      className={`flex shrink-0 cursor-pointer items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
+                        active
+                          ? "bg-[#171a18] text-white"
+                          : "bg-[#f4f1ea] text-[#5b5d59] hover:bg-[#ebe8e1]"
+                      }`}
+                    >
+                      {item !== "All" && (
+                        <Icon name={themeFor(item).icon} size={13} />
+                      )}
+                      {item}
+                      <span className={active ? "text-white/50" : "text-[#9a9b96]"}>
+                        {count}
+                      </span>
+                    </button>
+                  )
+                },
+              )}
+            </div>
+            {filtersActive && (
+              <button
+                onClick={clearFilters}
+                className="flex shrink-0 cursor-pointer items-center gap-1.5 text-xs font-semibold text-[#a92d35]"
+              >
+                <Icon name="refresh" size={14} /> Clear
+              </button>
+            )}
+          </div>
         </div>
-        <div className="mt-4 flex items-center justify-between text-xs text-[#747570]">
-          <span>
-            Filter by Python, JavaScript, Java, C++, project type, or year.
-          </span>
-          <button
-            onClick={() => {
-              setQuery("")
-              setCategory("All categories")
-              setYear("All years")
-            }}
-            className="flex cursor-pointer items-center gap-2 font-semibold text-[#a92d35]"
-          >
-            <Icon name="refresh" size={16} /> Clear all filters
-          </button>
-        </div>
+
+        {loadError && (
+          <p className="mt-6 rounded-xl border border-[#e6c6c6] bg-[#fbefef] p-4 text-sm text-[#8f252d]">
+            Could not load approved projects: {loadError}
+          </p>
+        )}
+
+        {years.map((groupYear) => {
+          const group = filtered.filter((project) => project.year === groupYear)
+          return (
+            <section key={groupYear} className="mt-10">
+              <div className="mb-5 flex items-center gap-3">
+                <h3 className="text-2xl font-semibold tracking-tight">
+                  {groupYear}
+                </h3>
+                <span className="rounded-full bg-[#ebe8e1] px-2.5 py-0.5 text-xs font-semibold text-[#5b5d59]">
+                  {group.length} {group.length === 1 ? "project" : "projects"}
+                </span>
+                <span className="h-px flex-1 bg-[#e2dfd8]" />
+              </div>
+              <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                {group.map((project) => (
+                  <ProjectCard
+                    faculty={role === "faculty"}
+                    key={project.id ?? project.title}
+                    project={project}
+                    onOpen={() => onOpen(project)}
+                  />
+                ))}
+              </div>
+            </section>
+          )
+        })}
+        {filtered.length === 0 && (
+          <div className="mt-10 flex flex-col items-center rounded-3xl border border-dashed border-[#d6d3cb] px-6 py-16 text-center">
+            <span className="grid size-12 place-items-center rounded-2xl bg-[#ebe8e1] text-[#5b5d59]">
+              <Icon name="search" size={22} />
+            </span>
+            <p className="mt-4 text-lg font-semibold">
+              {archiveProjects.length
+                ? "No projects match those filters."
+                : "No approved projects yet."}
+            </p>
+            <p className="mt-1 text-sm text-[#71726e]">
+              {archiveProjects.length
+                ? "Try a broader keyword or clear the filters."
+                : "Approved capstones will appear here."}
+            </p>
+            {filtersActive && (
+              <button
+                onClick={clearFilters}
+                className="mt-5 cursor-pointer rounded-xl bg-[#171a18] px-5 py-2.5 text-sm font-semibold text-white hover:bg-black"
+              >
+                Clear filters
+              </button>
+            )}
+          </div>
+        )}
       </section>
-
-      {loadError && (
-        <p className="mt-6 rounded border border-[#e6c6c6] bg-[#fbefef] p-4 text-sm text-[#8f252d]">
-          Could not load approved projects: {loadError}
-        </p>
-      )}
-
-      {years.map((groupYear) => {
-        const group = filtered.filter((project) => project.year === groupYear)
-        return (
-          <section key={groupYear} className="mt-10">
-            <div className="mb-5 flex items-center gap-4">
-              <h2 className="text-3xl font-semibold">{groupYear}</h2>
-              <span className="h-px flex-1 bg-[#d8d6cf]" />
-              <span className="text-xs text-[#747570]">
-                {group.length} projects
-              </span>
-            </div>
-            <div
-              className={`grid gap-4 ${
-                group.length === 2 ? "lg:grid-cols-2" : "lg:grid-cols-3"
-              }`}
-            >
-              {group.map((project) => (
-                <ProjectCard
-                  faculty={role === "faculty"}
-                  key={project.title}
-                  project={project}
-                  onOpen={() => onOpen(project)}
-                />
-              ))}
-            </div>
-          </section>
-        )
-      })}
-      {filtered.length === 0 && (
-        <div className="mt-16 text-center">
-          <p className="text-xl font-semibold">
-            No projects match those filters.
-          </p>
-          <p className="mt-2 text-sm text-[#71726e]">
-            Try a broader keyword or clear all filters.
-          </p>
-        </div>
-      )}
     </main>
   )
 }
 
-function Metric({
-  label,
-  value,
-  icon,
-  detail,
-}: {
-  label: string
-  value: string
-  icon: string
-  detail: string
-}) {
-  return (
-    <div className="rounded-lg border border-[#d9d7d0] bg-[#fffefa] p-6">
-      <div className="flex items-center justify-between">
-        <span className="text-sm text-[#71726e]">{label}</span>
-        <span className="grid size-9 place-items-center rounded bg-[#f1eee7] text-[#a92d35]">
-          <Icon name={icon} />
-        </span>
-      </div>
-      <strong className="mt-4 block text-3xl font-semibold">{value}</strong>
-      <span className="mt-1 block text-xs text-[#777873]">{detail}</span>
-    </div>
-  )
+function tourStepsFor(role: Role): OnboardingStep[] {
+  const welcome: OnboardingStep = {
+    eyebrow: "Welcome",
+    title: "Welcome to Deimos",
+    description:
+      "The University of Tampa's home for computer science capstones: every approved project, its team, and its code, all in one place.",
+    art: <WelcomeArt />,
+  }
+  const explore: OnboardingStep = {
+    title: "Explore past capstones",
+    description:
+      "Search by keyword, then narrow by technology, project type, or year to see what earlier Spartans built and how they built it.",
+    art: <ExploreArt />,
+  }
+  const discover: OnboardingStep = {
+    title: "Find similar projects",
+    description:
+      "Deimos reads each repository's stack and description to suggest related capstones, so you can learn from teams who tackled similar problems.",
+    art: <DiscoverArt />,
+  }
+  if (role === "faculty") {
+    return [
+      welcome,
+      {
+        title: "Your review queue",
+        description:
+          "New student submissions land in the review queue. Approve them for the public archive or request changes with a note.",
+        art: <ReviewArt />,
+      },
+      {
+        title: "Curate the archive",
+        description:
+          "Edit any approved project to fix details, update its repository link, or improve how it appears to future students.",
+        art: <ExploreArt />,
+      },
+      discover,
+    ]
+  }
+  if (role === "admin") {
+    return [
+      welcome,
+      {
+        title: "Manage who gets in",
+        description:
+          "Add or remove university emails and choose whether each person is a student, faculty member, or admin.",
+        art: <UsersArt />,
+      },
+      explore,
+    ]
+  }
+  if (role === "guest") {
+    return [
+      welcome,
+      explore,
+      {
+        title: "Browsing as a guest",
+        description:
+          "Guest access is read-only. Sign in with your UT account to submit a capstone or track your team's review status.",
+        art: <DiscoverArt />,
+      },
+    ]
+  }
+  return [
+    welcome,
+    explore,
+    {
+      title: "Submit your capstone",
+      description:
+        "Add your GitHub repository, a description, and screenshots or a demo video. Your project goes to faculty for review.",
+      art: <SubmitArt />,
+    },
+    {
+      title: "Track your review",
+      description:
+        "Follow your submission from review to published. If faculty request changes, you'll see their note right on your dashboard.",
+      art: <StatusArt />,
+    },
+    discover,
+  ]
 }
 
 function SubmissionsView({
@@ -801,98 +1489,102 @@ function SubmissionsView({
   onSubmit: () => void
 }) {
   return (
-    <main className="mx-auto max-w-[1320px] px-6 py-12 lg:px-14">
-      <div className="flex items-end justify-between">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-wide text-[#a92d35]">
-            Student workspace
-          </p>
-          <h1 className="mt-3 text-4xl font-medium tracking-tight">
-            My submissions
-          </h1>
-          <p className="mt-3 text-[#71726e]">
-            Track feedback and keep your project record up to date.
-          </p>
-        </div>
-        <button
-          onClick={onSubmit}
-          className="cursor-pointer rounded bg-[#a92d35] px-5 py-3 text-sm font-semibold text-white hover:bg-[#8f252d]"
-        >
-          New submission
-        </button>
-      </div>
+    <main className={PAGE}>
+      <PageHeader
+        eyebrow="Student workspace"
+        title="My submissions"
+        description="Track faculty feedback and keep your project record up to date."
+        action={
+          <button
+            onClick={onSubmit}
+            className="flex cursor-pointer items-center gap-2 rounded-xl bg-[#a92d35] px-5 py-3 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(169,45,53,0.25)] transition hover:bg-[#8f252d]"
+          >
+            <Icon name="plus" size={17} /> New submission
+          </button>
+        }
+      />
       {loadError && (
-        <p className="mt-6 rounded bg-[#fbefef] p-3 text-sm text-[#8f252d]">
+        <p className="mt-6 rounded-xl bg-[#fbefef] p-3 text-sm text-[#8f252d]">
           Could not load your submissions: {loadError}
         </p>
       )}
-      <div className="mt-9 grid gap-4 md:grid-cols-3">
-        <Metric
+      <div className="mt-8 grid gap-4 sm:grid-cols-3">
+        <StatTile
           label="Total submissions"
-          value={String(items.length)}
+          value={items.length}
+          detail="Everything you've sent for review"
           icon="folder"
-          detail="Across 2 academic years"
         />
-        <Metric
+        <StatTile
           label="Awaiting review"
-          value={String(
-            items.filter((item) => item.status === "In review").length,
-          )}
-          icon="clock"
+          value={items.filter((item) => item.status === "In review").length}
           detail="Usually reviewed in 3–5 days"
+          icon="clock"
         />
-        <Metric
+        <StatTile
           label="Published"
-          value={String(
-            items.filter((item) => item.status === "Approved").length,
-          )}
-          icon="check"
+          value={items.filter((item) => item.status === "Approved").length}
           detail="Visible in the project archive"
+          icon="check"
         />
       </div>
-      <section className="mt-8 overflow-hidden rounded-lg border border-[#d9d7d0] bg-[#fffefa]">
-        <div className="border-b border-[#dfddd6] px-6 py-5">
-          <h2 className="text-lg font-semibold">Recent submissions</h2>
-        </div>
-        {items.map((item) => (
-          <div
-            key={item.id ?? item.title}
-            className="grid gap-4 border-b border-[#e2e0da] px-6 py-5 last:border-0 md:grid-cols-[1fr_180px_1fr_auto] md:items-center"
-          >
-            <div>
-              <strong className="block">{item.title}</strong>
-              <span className="mt-1 block text-xs text-[#777873]">
-                {item.updated}
-              </span>
-            </div>
-            <div>
-              <Badge
-                tone={
-                  item.status === "Approved"
-                    ? "green"
-                    : item.status === "Changes requested"
-                      ? "amber"
-                      : item.status === "Rejected"
-                        ? "red"
-                        : item.status === "Archived"
-                          ? "neutral"
-                          : "blue"
-                }
-              >
-                {item.status}
-              </Badge>
-            </div>
-            <p className="text-sm text-[#6d6e6a]">{item.note}</p>
-            <button className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-[#a92d35]">
-              <Icon name="edit" size={16} />
-              {item.status === "Approved" ? "View" : "Edit"}
+
+      <section className="mt-8">
+        <h2 className="mb-4 text-lg font-semibold">Recent submissions</h2>
+        {items.length === 0 ? (
+          <div className="flex flex-col items-center rounded-3xl border border-dashed border-[#d6d3cb] px-6 py-16 text-center">
+            <span className="grid size-12 place-items-center rounded-2xl bg-[#ebe8e1] text-[#a92d35]">
+              <Icon name="upload" size={22} />
+            </span>
+            <p className="mt-4 text-lg font-semibold">
+              You haven't submitted a project yet
+            </p>
+            <p className="mt-1 text-sm text-[#71726e]">
+              Add your repository, description and media to send it for review.
+            </p>
+            <button
+              onClick={onSubmit}
+              className="mt-5 cursor-pointer rounded-xl bg-[#a92d35] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#8f252d]"
+            >
+              Submit your capstone
             </button>
           </div>
-        ))}
-        {items.length === 0 && (
-          <p className="px-6 py-12 text-center text-sm text-[#71726e]">
-            You haven’t submitted a project yet.
-          </p>
+        ) : (
+          <div className="grid gap-3">
+            {items.map((item) => (
+              <article
+                key={item.id ?? item.title}
+                className="grid gap-4 rounded-2xl border border-[#e2dfd8] bg-[#fffefa] p-5 transition hover:shadow-[0_10px_30px_rgba(24,26,24,0.06)] md:grid-cols-[1.2fr_1fr_104px] md:items-center"
+              >
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <strong className="truncate text-base">{item.title}</strong>
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${statusStyle[item.status].tone}`}
+                    >
+                      {item.status}
+                    </span>
+                  </div>
+                  <span className="mt-1 block text-xs text-[#8a8b86]">
+                    {item.updated}
+                  </span>
+                </div>
+                <div>
+                  <SubmissionProgress status={item.status} />
+                  <div className="mt-1.5 grid grid-cols-3 text-[10px] font-medium text-[#9a9b96]">
+                    <span>Submitted</span>
+                    <span className="text-center">Review</span>
+                    <span className="text-right">Published</span>
+                  </div>
+                  <p className="mt-2 text-sm text-[#5b5d59]">{item.note}</p>
+                </div>
+                <button className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-[#e2dfd8] px-4 py-2 text-sm font-semibold text-[#a92d35] transition hover:border-[#a92d35] hover:bg-[#fbf6f5]">
+                  <Icon name={item.status === "Approved" ? "arrow" : "edit"} size={15} />
+                  {item.status === "Approved" ? "View" : "Edit"}
+                </button>
+              </article>
+            ))}
+          </div>
         )}
       </section>
     </main>
@@ -916,6 +1608,9 @@ function ReviewView({
   const [decisions, setDecisions] = useState<Record<string, string>>({})
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
+  const [filter, setFilter] = useState<
+    "all" | "pending_review" | "changes_requested"
+  >("all")
   const decide = async (
     item: ReviewItem,
     decision: "approved" | "changes_requested",
@@ -938,111 +1633,161 @@ function ReviewView({
       setSaving(false)
     }
   }
+  const pendingCount = items.filter(
+    (item) => item.status === "pending_review",
+  ).length
+  const changesCount = items.filter(
+    (item) => item.status === "changes_requested",
+  ).length
+  const visible =
+    filter === "all" ? items : items.filter((item) => item.status === filter)
+  const tabs: { key: typeof filter; label: string; count: number }[] = [
+    { key: "all", label: "All", count: items.length },
+    { key: "pending_review", label: "Ready for review", count: pendingCount },
+    { key: "changes_requested", label: "Changes requested", count: changesCount },
+  ]
+
   return (
-    <main className="mx-auto max-w-[1320px] px-6 py-12 lg:px-14">
-      <div>
-        <p className="text-xs font-bold uppercase tracking-wide text-[#a92d35]">
-          Faculty workspace
-        </p>
-        <h1 className="mt-3 text-4xl font-medium tracking-tight">
-          Submission review
-        </h1>
-        <p className="mt-3 text-[#71726e]">
-          Evaluate student work before it enters the public archive.
-        </p>
-      </div>
-      <div className="mt-9 grid gap-4 md:grid-cols-3">
-        <Metric
+    <main className={PAGE}>
+      <PageHeader
+        eyebrow="Faculty workspace"
+        title="Review queue"
+        description="Evaluate student work before it enters the public archive."
+      />
+      <div className="mt-8 grid gap-4 sm:grid-cols-3">
+        <StatTile
           label="Awaiting review"
-          value={String(
-            items.filter((item) => item.status === "pending_review").length,
-          )}
+          value={pendingCount}
+          detail="Oldest submissions first"
           icon="clock"
-          detail="2 added this week"
         />
-        <Metric
-          label="Approved this term"
-          value={String(approvedCount)}
-          icon="check"
+        <StatTile
+          label="Approved projects"
+          value={approvedCount}
           detail="Visible in the public archive"
+          icon="check"
         />
-        <Metric
+        <StatTile
           label="Changes requested"
-          value={String(
-            items.filter((item) => item.status === "changes_requested").length,
-          )}
+          value={changesCount}
+          detail="Waiting on students"
           icon="edit"
-          detail="Students have been notified"
         />
       </div>
-      <section className="mt-8 rounded-lg border border-[#d9d7d0] bg-[#fffefa]">
-        <div className="flex items-center justify-between border-b border-[#dfddd6] px-6 py-5">
-          <h2 className="text-lg font-semibold">Review queue</h2>
-          <span className="text-xs text-[#777873]">
-            Oldest submissions first
-          </span>
+
+      <section className="mt-8">
+        <div className="flex flex-wrap gap-2">
+          {tabs.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setFilter(tab.key)}
+              aria-pressed={filter === tab.key}
+              className={`flex cursor-pointer items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition ${
+                filter === tab.key
+                  ? "bg-[#171a18] text-white"
+                  : "bg-[#fffefa] text-[#5b5d59] ring-1 ring-[#e2dfd8] hover:bg-[#ebe8e1]"
+              }`}
+            >
+              {tab.label}
+              <span className={filter === tab.key ? "text-white/50" : "text-[#9a9b96]"}>
+                {tab.count}
+              </span>
+            </button>
+          ))}
         </div>
+
         {(error || loadError) && (
-          <p className="m-5 rounded bg-[#fbefef] p-3 text-sm text-[#8f252d]">
+          <p className="mt-4 rounded-xl bg-[#fbefef] p-3 text-sm text-[#8f252d]">
             {error || loadError}
           </p>
         )}
-        {items.map((item) => (
-          <article
-            key={item.id}
-            className="grid gap-5 border-b border-[#e2e0da] px-6 py-6 last:border-0 lg:grid-cols-[1fr_180px_150px_auto] lg:items-center"
-          >
-            <div>
-              <div className="mb-2 flex items-center gap-2">
-                <Badge tone="blue">{item.type}</Badge>
-                <span className="text-xs text-[#777873]">{item.submitted}</span>
-              </div>
-              <h3 className="text-lg font-semibold">{item.project}</h3>
-              <p className="mt-1 text-sm text-[#6d6e6a]">
-                Submitted by {item.student}
+
+        <div className="mt-4 grid gap-3">
+          {visible.map((item) => {
+            const decided = decisions[item.id]
+            return (
+              <article
+                key={item.id}
+                className={`grid gap-4 rounded-2xl border bg-[#fffefa] p-5 transition lg:grid-cols-[1fr_auto] lg:items-center ${
+                  decided
+                    ? "border-[#e2dfd8] opacity-70"
+                    : "border-[#e2dfd8] hover:shadow-[0_10px_30px_rgba(24,26,24,0.06)]"
+                }`}
+              >
+                <div className="flex min-w-0 items-start gap-4">
+                  <span className="grid size-11 shrink-0 place-items-center rounded-full bg-[#171a18] text-sm font-bold text-white">
+                    {initialsOf(item.student)}
+                  </span>
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span
+                        className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${themeFor(item.type).soft}`}
+                      >
+                        {item.type}
+                      </span>
+                      <span className="text-xs text-[#8a8b86]">
+                        {item.submitted}
+                      </span>
+                      {decided ? (
+                        <span
+                          className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                            decided === "Approved"
+                              ? "bg-[#e8f1ea] text-[#347153]"
+                              : "bg-[#f5edda] text-[#866420]"
+                          }`}
+                        >
+                          <Icon name="check" size={11} /> {decided}
+                        </span>
+                      ) : (
+                        item.status === "changes_requested" && (
+                          <span className="rounded-full bg-[#f8e9e9] px-2 py-0.5 text-[11px] font-semibold text-[#a92d35]">
+                            Changes requested
+                          </span>
+                        )
+                      )}
+                    </div>
+                    <h3 className="mt-1.5 truncate text-lg font-semibold">
+                      {item.project}
+                    </h3>
+                    <p className="text-sm text-[#71726e]">
+                      Submitted by {item.student}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <button className="cursor-pointer rounded-xl px-4 py-2.5 text-sm font-semibold text-[#5b5d59] transition hover:bg-[#f4f1ea] hover:text-[#171a18]">
+                    View submission
+                  </button>
+                  <button
+                    disabled={saving || !!decided}
+                    onClick={() => void decide(item, "changes_requested")}
+                    className="cursor-pointer rounded-xl border border-[#d6d3cb] px-4 py-2.5 text-sm font-semibold transition hover:bg-[#f4f1ea] disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Request changes
+                  </button>
+                  <button
+                    disabled={saving || !!decided}
+                    onClick={() => void decide(item, "approved")}
+                    className="flex cursor-pointer items-center gap-1.5 rounded-xl bg-[#a92d35] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#8f252d] disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <Icon name="check" size={15} /> Approve
+                  </button>
+                </div>
+              </article>
+            )
+          })}
+          {visible.length === 0 && (
+            <div className="flex flex-col items-center rounded-3xl border border-dashed border-[#d6d3cb] px-6 py-16 text-center">
+              <span className="grid size-12 place-items-center rounded-2xl bg-[#e8f1ea] text-[#347153]">
+                <Icon name="check" size={22} />
+              </span>
+              <p className="mt-4 text-lg font-semibold">You're all caught up</p>
+              <p className="mt-1 text-sm text-[#71726e]">
+                There are no projects in this list right now.
               </p>
             </div>
-            {decisions[item.id] ? (
-              <Badge
-                tone={decisions[item.id] === "Approved" ? "green" : "amber"}
-              >
-                {decisions[item.id]}
-              </Badge>
-            ) : (
-              <Badge
-                tone={item.status === "changes_requested" ? "amber" : "blue"}
-              >
-                {item.status === "changes_requested"
-                  ? "Changes requested"
-                  : "Ready for review"}
-              </Badge>
-            )}
-            <button className="cursor-pointer text-left text-sm font-semibold text-[#a92d35] hover:underline">
-              View submission
-            </button>
-            <div className="flex gap-2">
-              <button
-                disabled={saving}
-                onClick={() => void decide(item, "changes_requested")}
-                className="cursor-pointer rounded border border-[#b7b5ae] px-4 py-2 text-sm font-semibold hover:bg-[#f2efe8]"
-              >
-                Request changes
-              </button>
-              <button
-                disabled={saving}
-                onClick={() => void decide(item, "approved")}
-                className="cursor-pointer rounded bg-[#a92d35] px-4 py-2 text-sm font-semibold text-white hover:bg-[#8f252d]"
-              >
-                Approve
-              </button>
-            </div>
-          </article>
-        ))}
-        {items.length === 0 && (
-          <p className="px-6 py-12 text-center text-sm text-[#71726e]">
-            There are no projects waiting for review.
-          </p>
-        )}
+          )}
+        </div>
       </section>
     </main>
   )
@@ -1683,6 +2428,10 @@ function AuthorizedUsersView({ demoMode }: { demoMode: boolean }) {
   const [pendingRemoval, setPendingRemoval] = useState("")
   const [error, setError] = useState("")
   const [notice, setNotice] = useState("")
+  const [search, setSearch] = useState("")
+  const [roleFilter, setRoleFilter] = useState<"all" | AuthorizedUser["role"]>(
+    "all",
+  )
 
   const refreshUsers = async () => {
     const rows = await getAuthorizedUsers()
@@ -1771,131 +2520,198 @@ function AuthorizedUsersView({ demoMode }: { demoMode: boolean }) {
     }
   }
 
+  const roleTone: Record<AuthorizedUser["role"], string> = {
+    student: "bg-[#f8e9e9] text-[#a92d35]",
+    faculty: "bg-[#e9f0f4] text-[#355f72]",
+    admin: "bg-[#171a18] text-white",
+  }
+  const roleCount = (role: AuthorizedUser["role"]) =>
+    users.filter((user) => user.role === role).length
+  const visibleUsers = users.filter(
+    (user) =>
+      (roleFilter === "all" || user.role === roleFilter) &&
+      user.email.includes(search.trim().toLowerCase()),
+  )
+
   return (
-    <main className="mx-auto max-w-[1450px] px-6 py-12 lg:px-14 lg:py-14">
-      <p className="text-xs font-bold uppercase tracking-wide text-[#a92d35]">
-        Administration
-      </p>
-      <h1 className="mt-3 text-4xl font-medium tracking-tight md:text-5xl">
-        Authorized users
-      </h1>
-      <p className="mt-3 max-w-2xl text-[#71726e]">
-        Add email addresses that may create Deimos accounts, assign their role,
-        or revoke their account privileges. Approved projects remain publicly
-        viewable to guests.
-      </p>
+    <main className={PAGE}>
+      <PageHeader
+        eyebrow="Administration"
+        title="Authorized users"
+        description="Add email addresses that may create Deimos accounts, assign their role, or revoke access. Approved projects stay publicly viewable to guests."
+      />
       {demoMode && (
-        <p className="mt-5 rounded border border-[#ead9ae] bg-[#fbf5e6] p-3 text-sm text-[#765c21]">
+        <p className="mt-5 rounded-xl border border-[#ead9ae] bg-[#fbf5e6] p-3 text-sm text-[#765c21]">
           Demo admin: changes to this sample list are temporary and are not
           saved to Supabase.
         </p>
       )}
 
-      <section className="mt-8 rounded-lg border border-[#d9d7d0] bg-[#fffefa] p-6 shadow-sm">
-        <h2 className="text-lg font-semibold">Authorize an email</h2>
-        <form onSubmit={handleAdd} className="mt-4 grid gap-4 md:grid-cols-[1fr_220px_auto]">
-          <label>
-            <span className="mb-2 block text-sm font-medium">Email address</span>
-            <input
-              name="email"
-              type="email"
-              required
-              placeholder="name@spartans.ut.edu"
-              className="h-12 w-full rounded border border-[#d6d4ce] bg-transparent px-3 text-sm outline-none focus:border-[#a92d35]"
-            />
-          </label>
-          <label>
-            <span className="mb-2 block text-sm font-medium">Account role</span>
-            <select
-              name="role"
-              defaultValue="student"
-              className="h-12 w-full rounded border border-[#d6d4ce] bg-[#fffefa] px-3 text-sm"
-            >
-              <option value="student">Student</option>
-              <option value="faculty">Faculty</option>
-              <option value="admin">Admin</option>
-            </select>
-          </label>
-          <button
-            type="submit"
-            disabled={saving}
-            className="mt-auto h-12 cursor-pointer rounded bg-[#a92d35] px-6 text-sm font-semibold text-white disabled:cursor-wait disabled:opacity-60"
-          >
-            {saving ? "Adding..." : "Add authorized user"}
-          </button>
-        </form>
-        {(error || notice) && (
-          <p
-            className={`mt-4 rounded p-3 text-sm ${
-              error
-                ? "bg-[#fbefef] text-[#8f252d]"
-                : "bg-[#e8f1ea] text-[#347153]"
-            }`}
-          >
-            {error || notice}
-          </p>
-        )}
-      </section>
+      <div className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <StatTile label="Total users" value={users.length} detail="On the access list" icon="users" />
+        <StatTile label="Students" value={roleCount("student")} detail="Can submit projects" icon="cap" />
+        <StatTile label="Faculty" value={roleCount("faculty")} detail="Can review & curate" icon="book" />
+        <StatTile label="Admins" value={roleCount("admin")} detail="Can manage access" icon="shield" />
+      </div>
 
-      <section className="mt-8 overflow-hidden rounded-lg border border-[#d9d7d0] bg-[#fffefa] shadow-sm">
-        <div className="flex items-center justify-between border-b border-[#dfddd6] px-6 py-5">
-          <div>
-            <h2 className="text-lg font-semibold">Access list</h2>
-            <p className="mt-1 text-sm text-[#71726e]">
-              {users.length} authorized {users.length === 1 ? "user" : "users"}
-            </p>
-          </div>
-          <Icon name="users" size={21} />
-        </div>
-        {loading ? (
-          <p className="p-6 text-sm text-[#71726e]">Loading users...</p>
-        ) : users.length ? (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[600px] text-left text-sm">
-              <thead className="bg-[#f7f5ef] text-xs uppercase tracking-wide text-[#71726e]">
-                <tr>
-                  <th className="px-6 py-3 font-semibold">Email</th>
-                  <th className="px-6 py-3 font-semibold">Role</th>
-                  <th className="px-6 py-3 font-semibold">Added</th>
-                  <th className="px-6 py-3 text-right font-semibold">Access</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((user) => (
-                  <tr key={user.email} className="border-t border-[#ebe9e2]">
-                    <td className="px-6 py-4 font-medium">{user.email}</td>
-                    <td className="px-6 py-4 capitalize">{user.role}</td>
-                    <td className="px-6 py-4 text-[#71726e]">
-                      {new Date(user.created_at).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <button
-                        type="button"
-                        onClick={() => void handleRemove(user.email)}
-                        disabled={
-                          pendingRemoval === user.email ||
-                          user.email === currentAdminEmail
-                        }
-                        className="cursor-pointer rounded border border-[#dfbfc0] px-3 py-2 text-xs font-semibold text-[#a92d35] hover:bg-[#fbefef] disabled:opacity-50"
-                      >
-                        {user.email === currentAdminEmail
-                          ? "Current account"
-                          : pendingRemoval === user.email
-                            ? "Removing..."
-                            : "Remove access"}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <p className="p-6 text-sm text-[#71726e]">
-            No authorized users found.
+      <div className="mt-8 grid items-start gap-4 lg:grid-cols-[360px_1fr]">
+        <section className="rounded-3xl border border-[#e2dfd8] bg-[#fffefa] p-6 lg:sticky lg:top-6">
+          <span className="grid size-10 place-items-center rounded-xl bg-[#f8eeee] text-[#a92d35]">
+            <Icon name="plus" size={20} />
+          </span>
+          <h2 className="mt-4 text-lg font-semibold">Authorize an email</h2>
+          <p className="mt-1 text-sm text-[#71726e]">
+            They'll be able to create an account with this address.
           </p>
-        )}
-      </section>
+          <form onSubmit={handleAdd} className="mt-5 grid gap-4">
+            <label>
+              <span className="mb-2 block text-sm font-medium">Email address</span>
+              <span className="flex h-12 items-center gap-3 rounded-xl bg-[#f4f1ea] px-4 transition focus-within:bg-white focus-within:shadow-[0_0_0_2px_#a92d35]">
+                <Icon name="mail" className="text-[#777873]" />
+                <input
+                  name="email"
+                  type="email"
+                  required
+                  placeholder="name@spartans.ut.edu"
+                  className="h-full w-full bg-transparent text-sm outline-none focus-visible:outline-none"
+                />
+              </span>
+            </label>
+            <fieldset>
+              <legend className="mb-2 block text-sm font-medium">Account role</legend>
+              <div className="grid grid-cols-3 gap-2">
+                {(["student", "faculty", "admin"] as const).map((role) => (
+                  <label key={role} className="cursor-pointer">
+                    <input
+                      type="radio"
+                      name="role"
+                      value={role}
+                      defaultChecked={role === "student"}
+                      className="peer sr-only"
+                    />
+                    <span className="flex flex-col items-center gap-1 rounded-xl border border-[#e2dfd8] py-3 text-xs font-semibold capitalize text-[#5b5d59] transition peer-checked:border-[#a92d35] peer-checked:bg-[#f8eeee] peer-checked:text-[#a92d35] peer-focus-visible:ring-2 peer-focus-visible:ring-[#a92d35]">
+                      <Icon
+                        name={role === "student" ? "cap" : role === "faculty" ? "book" : "shield"}
+                        size={18}
+                      />
+                      {role}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+            <button
+              type="submit"
+              disabled={saving}
+              className="h-12 cursor-pointer rounded-xl bg-[#a92d35] px-6 text-sm font-semibold text-white transition hover:bg-[#8f252d] disabled:cursor-wait disabled:opacity-60"
+            >
+              {saving ? "Adding..." : "Add authorized user"}
+            </button>
+          </form>
+          {(error || notice) && (
+            <p
+              className={`mt-4 rounded-xl p-3 text-sm ${
+                error ? "bg-[#fbefef] text-[#8f252d]" : "bg-[#e8f1ea] text-[#347153]"
+              }`}
+            >
+              {error || notice}
+            </p>
+          )}
+        </section>
+
+        <section className="overflow-hidden rounded-3xl border border-[#e2dfd8] bg-[#fffefa]">
+          <div className="flex flex-col gap-3 border-b border-[#ebe8e1] p-5 md:flex-row md:items-center">
+            <div className="md:mr-auto">
+              <h2 className="text-lg font-semibold">Access list</h2>
+              <p className="text-sm text-[#71726e]">
+                {users.length} authorized {users.length === 1 ? "user" : "users"}
+              </p>
+            </div>
+            <label className="flex h-10 items-center gap-2 rounded-xl bg-[#f4f1ea] px-3 transition focus-within:bg-white focus-within:shadow-[0_0_0_2px_#a92d35] md:w-60">
+              <Icon name="search" size={16} className="text-[#777873]" />
+              <span className="sr-only">Search users</span>
+              <input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Search emails"
+                className="h-full w-full bg-transparent text-sm outline-none focus-visible:outline-none"
+              />
+            </label>
+          </div>
+          <div className="flex gap-2 overflow-x-auto border-b border-[#ebe8e1] px-5 py-3">
+            {(["all", "student", "faculty", "admin"] as const).map((role) => (
+              <button
+                key={role}
+                onClick={() => setRoleFilter(role)}
+                aria-pressed={roleFilter === role}
+                className={`shrink-0 cursor-pointer rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
+                  roleFilter === role
+                    ? "bg-[#171a18] text-white"
+                    : "bg-[#f4f1ea] text-[#5b5d59] hover:bg-[#ebe8e1]"
+                }`}
+              >
+                {{ all: "All roles", student: "Students", faculty: "Faculty", admin: "Admins" }[role]}
+                <span className={`ml-1.5 ${roleFilter === role ? "text-white/50" : "text-[#9a9b96]"}`}>
+                  {role === "all" ? users.length : roleCount(role)}
+                </span>
+              </button>
+            ))}
+          </div>
+          {loading ? (
+            <p className="p-6 text-sm text-[#71726e]">Loading users...</p>
+          ) : visibleUsers.length ? (
+            <ul>
+              {visibleUsers.map((user) => {
+                const self = user.email === currentAdminEmail
+                return (
+                  <li
+                    key={user.email}
+                    className="flex flex-wrap items-center gap-4 border-b border-[#f0eee8] px-5 py-4 last:border-0"
+                  >
+                    <span className="grid size-10 shrink-0 place-items-center rounded-full bg-[#ebe8e1] text-xs font-bold uppercase text-[#343735]">
+                      {user.email.slice(0, 2)}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <strong className="block truncate text-sm">
+                        {user.email}
+                        {self && (
+                          <span className="ml-2 rounded-full bg-[#e8f1ea] px-2 py-0.5 text-[10px] font-semibold text-[#347153]">
+                            You
+                          </span>
+                        )}
+                      </strong>
+                      <span className="text-xs text-[#8a8b86]">
+                        Added {new Date(user.created_at).toLocaleDateString()}
+                      </span>
+                    </span>
+                    <span
+                      className={`rounded-full px-2.5 py-1 text-[11px] font-semibold capitalize ${roleTone[user.role]}`}
+                    >
+                      {user.role}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => void handleRemove(user.email)}
+                      disabled={pendingRemoval === user.email || self}
+                      className="cursor-pointer rounded-xl border border-[#e8cfd0] px-3 py-2 text-xs font-semibold text-[#a92d35] transition hover:bg-[#fbefef] disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      {self
+                        ? "Current account"
+                        : pendingRemoval === user.email
+                          ? "Removing..."
+                          : "Remove access"}
+                    </button>
+                  </li>
+                )
+              })}
+            </ul>
+          ) : (
+            <p className="p-10 text-center text-sm text-[#71726e]">
+              {users.length ? "No users match that search." : "No authorized users found."}
+            </p>
+          )}
+        </section>
+      </div>
     </main>
   )
 }
@@ -1924,157 +2740,196 @@ function AuthScreen({
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [formError, setFormError] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
+
+  const passwordToggle = (
+    <button
+      type="button"
+      onClick={() => setShowPassword((value) => !value)}
+      aria-label={showPassword ? "Hide password" : "Show password"}
+      className="shrink-0 cursor-pointer text-[#777873] transition hover:text-[#171a18]"
+    >
+      <Icon name={showPassword ? "eyeOff" : "eye"} />
+    </button>
+  )
 
   return (
-    <main className="grid min-h-screen bg-[#f4f1ea] lg:grid-cols-[38%_62%]">
-      <section className="relative hidden min-h-screen flex-col bg-[#171a18] px-14 py-14 text-white lg:flex xl:px-20">
-        <div className="flex items-center gap-3">
-          <span className="grid size-11 place-items-center rounded border border-white/80 text-lg font-bold">
+    <main className="grid min-h-screen bg-[#fffefa] text-[#171a18] lg:grid-cols-2">
+      {/* Left: animated UT orbit */}
+      <section className="relative hidden min-h-screen overflow-hidden bg-[#f4f1ea] lg:block">
+        <div className="absolute inset-x-0 bottom-28 top-0">
+        <Ripple mainCircleSize={180} />
+        <OrbitDisplay
+          center={
+            <img
+              src="/brand/ut-spartans-seal.png"
+              alt="University of Tampa Spartans"
+              className="deimos-float size-[190px] object-contain drop-shadow-[0_18px_30px_rgba(23,26,24,0.18)] xl:size-[220px]"
+            />
+          }
+          icons={authOrbitIcons}
+        />
+        </div>
+
+        <div className="absolute left-12 top-10 z-20 flex items-center gap-3">
+          <span className="grid size-11 place-items-center rounded border border-[#171a18] text-lg font-bold">
             D
           </span>
           <span>
             <strong className="block text-xl tracking-tight">DEIMOS</strong>
-            <span className="block text-xs tracking-wide text-white/50">
+            <span className="block text-xs tracking-wide text-[#71726e]">
               THE UNIVERSITY OF TAMPA
             </span>
           </span>
         </div>
-        <div className="my-auto max-w-md">
-          <p className="text-xs font-bold uppercase tracking-wide text-white/80">
+
+        <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-[#f4f1ea] via-[#f4f1ea]/90 to-transparent px-12 pb-10 pt-24">
+          <p className="text-xs font-bold uppercase tracking-wide text-[#a92d35]">
             Capstone archive
           </p>
-          <h1 className="mt-7 text-5xl font-medium leading-[1.08] tracking-tight xl:text-6xl">
+          <h1 className="mt-3 max-w-md text-3xl font-medium leading-[1.1] tracking-tight xl:text-4xl">
             Discover what students build. Preserve what they learn.
           </h1>
-          <p className="mt-8 max-w-sm text-lg leading-7 text-white/65">
-            A living archive of University of Tampa capstone projects, teams,
-            and technical ideas.
-          </p>
         </div>
-        <p className="text-xs text-white/35">
-          Built for students, faculty, and future collaborators.
-        </p>
       </section>
 
+      {/* Right: sign-in form */}
       <section className="flex min-h-screen items-center justify-center px-5 py-10 sm:px-10">
-        <div className="w-full max-w-xl rounded-xl bg-[#fffefa] p-7 shadow-[0_18px_45px_rgba(23,26,24,0.09)] sm:p-10">
+        <div className="w-full max-w-md">
           <div className="mb-8 flex items-center gap-3 lg:hidden">
-            <span className="grid size-9 place-items-center rounded bg-[#171a18] text-sm font-bold text-white">
-              D
+            <img
+              src="/brand/ut-spartans-seal.png"
+              alt=""
+              className="size-12 object-contain"
+            />
+            <span>
+              <strong className="block text-lg leading-5">DEIMOS</strong>
+              <span className="block text-[11px] tracking-wide text-[#71726e]">
+                THE UNIVERSITY OF TAMPA
+              </span>
             </span>
-            <strong className="text-lg">DEIMOS</strong>
           </div>
-          <h2 className="text-3xl font-semibold tracking-tight">
-            Welcome to Deimos
-          </h2>
-          <p className="mt-2 text-[#6f716d]">
-            Choose how you’d like to explore the capstone archive.
-          </p>
-          {demoMode && (
-            <p className="mt-4 rounded border border-[#ead9ae] bg-[#fbf5e6] p-3 text-sm text-[#765c21]">
-              Demo mode: connect Supabase to enable real accounts and saved
-              projects.
+
+          <BoxReveal>
+            <h2 className="text-3xl font-bold tracking-tight">
+              Welcome to Deimos
+            </h2>
+          </BoxReveal>
+          <BoxReveal delay={0.08} className="mt-2">
+            <p className="text-sm text-[#6f716d]">
+              Choose how you’d like to explore the capstone archive.
             </p>
+          </BoxReveal>
+
+          {demoMode && (
+            <BoxReveal delay={0.14} full className="mt-4">
+              <p className="rounded-md border border-[#ead9ae] bg-[#fbf5e6] p-3 text-xs leading-5 text-[#765c21]">
+                Demo mode: connect Supabase to enable real accounts and saved
+                projects.
+              </p>
+            </BoxReveal>
           )}
 
           {accountRole !== "guest" && (
-            <div className="mt-7 grid grid-cols-2 rounded-lg bg-[#edeae3] p-1">
-              <button
-                onClick={() => setMode("signin")}
-                className={`cursor-pointer rounded-md py-3 text-sm font-semibold transition ${
-                  mode === "signin"
-                    ? "bg-[#fffefa] shadow-sm"
-                    : "text-[#6f716d]"
-                }`}
-              >
-                Sign in
-              </button>
-              <button
-                onClick={() => {
-                  setMode("create")
-                  setAccountRole("student")
-                }}
-                className={`cursor-pointer rounded-md py-3 text-sm font-semibold transition ${
-                  mode === "create"
-                    ? "bg-[#fffefa] shadow-sm"
-                    : "text-[#6f716d]"
-                }`}
-              >
-                Create account
-              </button>
-            </div>
-          )}
-
-          <p className="mt-7 text-sm font-semibold">
-            {accountRole === "guest"
-              ? "Browse the archive as a..."
-              : `I am ${
-                  mode === "create" ? "creating an" : "signing in to an"
-                }...`}
-          </p>
-          <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            {(
-              mode === "create"
-                ? (["student"] as Role[])
-                : (["student", "faculty", "admin", "guest"] as Role[])
-            ).map((item) => {
-              const active = accountRole === item
-              return (
+            <BoxReveal delay={0.2} full className="mt-6">
+              <div className="grid grid-cols-2 rounded-lg bg-[#edeae3] p-1">
                 <button
-                  key={item}
                   type="button"
-                  onClick={() => setAccountRole(item)}
-                  className={`flex cursor-pointer items-center gap-4 rounded-lg border-2 p-4 text-left transition ${
-                    active
-                      ? "border-[#a92d35] bg-[#f8eeee]"
-                      : "border-[#dedbd4] hover:border-[#aaa7a0]"
+                  onClick={() => setMode("signin")}
+                  className={`cursor-pointer rounded-md py-2.5 text-sm font-semibold transition ${
+                    mode === "signin"
+                      ? "bg-[#fffefa] shadow-sm"
+                      : "text-[#6f716d] hover:text-[#171a18]"
                   }`}
                 >
-                  <span
-                    className={`grid size-11 shrink-0 place-items-center rounded-md ${
+                  Sign in
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode("create")
+                    setAccountRole("student")
+                  }}
+                  className={`cursor-pointer rounded-md py-2.5 text-sm font-semibold transition ${
+                    mode === "create"
+                      ? "bg-[#fffefa] shadow-sm"
+                      : "text-[#6f716d] hover:text-[#171a18]"
+                  }`}
+                >
+                  Create account
+                </button>
+              </div>
+            </BoxReveal>
+          )}
+
+          <BoxReveal delay={0.26} className="mt-6">
+            <p className="text-sm font-semibold">
+              {accountRole === "guest"
+                ? "Browse the archive as a..."
+                : `I am ${
+                    mode === "create" ? "creating an" : "signing in to an"
+                  }...`}
+            </p>
+          </BoxReveal>
+          <BoxReveal delay={0.32} full className="mt-3">
+            <div className="grid grid-cols-2 gap-2.5">
+              {(
+                mode === "create"
+                  ? (["student"] as Role[])
+                  : (["student", "faculty", "admin", "guest"] as Role[])
+              ).map((item) => {
+                const active = accountRole === item
+                return (
+                  <button
+                    key={item}
+                    type="button"
+                    onClick={() => setAccountRole(item)}
+                    aria-pressed={active}
+                    className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 text-left transition ${
                       active
-                        ? "bg-[#a92d35] text-white"
-                        : "bg-[#efede7] text-[#171a18]"
+                        ? "border-[#a92d35] bg-[#f8eeee] shadow-[0_0_0_1px_#a92d35]"
+                        : "border-[#dedbd4] hover:border-[#aaa7a0] hover:bg-[#faf8f4]"
                     }`}
                   >
-                    <Icon
-                      name={
-                        item === "student"
-                          ? "cap"
-                          : item === "faculty"
-                            ? "book"
-                            : item === "admin"
-                              ? "users"
-                            : "user"
-                      }
-                      size={22}
-                    />
-                  </span>
-                  <span>
-                    <strong className="block text-sm capitalize">
-                      {item === "guest" ? "Guest access" : `${item} account`}
-                    </strong>
-                    <span className="mt-1 block text-xs leading-4 text-[#6f716d]">
-                      {item === "student"
-                        ? "Submit work and manage your project."
-                        : item === "faculty"
-                          ? "Review, approve, and curate projects."
-                          : item === "admin"
-                            ? "Manage who is authorized to use Deimos."
-                          : "Browse approved projects without an account."}
+                    <span
+                      className={`grid size-9 shrink-0 place-items-center rounded-md transition ${
+                        active
+                          ? "bg-[#a92d35] text-white"
+                          : "bg-[#efede7] text-[#171a18]"
+                      }`}
+                    >
+                      <Icon
+                        name={
+                          item === "student"
+                            ? "cap"
+                            : item === "faculty"
+                              ? "book"
+                              : item === "admin"
+                                ? "users"
+                                : "user"
+                        }
+                        size={18}
+                      />
                     </span>
-                  </span>
-                  <i
-                    className={`ml-auto size-4 shrink-0 rounded-full border ${
-                      active
-                        ? "border-[#a92d35] bg-[#a92d35]"
-                        : "border-[#b9b7b0]"
-                    }`}
-                  />
-                </button>
-              )
-            })}
-          </div>
+                    <span className="min-w-0">
+                      <strong className="block text-sm capitalize">
+                        {item === "guest" ? "Guest" : item}
+                      </strong>
+                      <span className="block truncate text-[11px] text-[#6f716d]">
+                        {item === "student"
+                          ? "Submit & manage work"
+                          : item === "faculty"
+                            ? "Review & approve"
+                            : item === "admin"
+                              ? "Manage access"
+                              : "Browse read-only"}
+                      </span>
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          </BoxReveal>
 
           <form
             className="mt-6"
@@ -2089,21 +2944,23 @@ function AuthScreen({
             }}
           >
             {accountRole === "guest" ? (
-              <button
-                type="submit"
-                className="h-14 w-full cursor-pointer rounded-lg bg-[#a92d35] text-sm font-semibold text-white transition hover:bg-[#8f252d]"
-              >
-                Continue as guest
-              </button>
+              <BoxReveal delay={0.38} full>
+                <button
+                  type="submit"
+                  className="group/btn relative h-12 w-full cursor-pointer rounded-lg bg-[#a92d35] text-sm font-semibold text-white shadow-[0_1px_0_0_#ffffff40_inset,0_-1px_0_0_#00000030_inset] transition hover:bg-[#8f252d]"
+                >
+                  Continue as guest &rarr;
+                  <BottomGradient />
+                </button>
+              </BoxReveal>
             ) : (
               <>
-                <label className="block">
-                  <span className="mb-2 block text-sm font-semibold">
-                    University email
-                  </span>
-                  <span className="flex h-13 items-center gap-3 rounded-lg border border-[#d6d4ce] px-4 focus-within:border-[#a92d35]">
-                    <Icon name="mail" className="text-[#777873]" />
-                    <input
+                <BoxReveal delay={0.38} full>
+                  <label className="block">
+                    <span className="mb-2 block text-sm font-semibold">
+                      University email
+                    </span>
+                    <SpotlightInput
                       type="email"
                       required
                       value={email}
@@ -2113,49 +2970,49 @@ function AuthScreen({
                           ? "name@spartans.ut.edu"
                           : "name@ut.edu"
                       }
-                      className="h-full w-full bg-transparent text-sm outline-none"
+                      icon={<Icon name="mail" />}
                     />
-                  </span>
-                </label>
+                  </label>
+                </BoxReveal>
+
                 <div
-                  className={`mt-5 grid gap-4 ${
+                  className={`mt-4 grid gap-4 ${
                     mode === "create" ? "sm:grid-cols-2" : ""
                   }`}
                 >
-                  <label>
-                    <span className="mb-2 flex items-center justify-between text-sm font-semibold">
-                      Password
-                      {mode === "signin" && (
-                        <button
-                          type="button"
-                          className="cursor-pointer text-xs text-[#a92d35]"
-                        >
-                          Forgot password?
-                        </button>
-                      )}
-                    </span>
-                    <span className="flex h-13 items-center gap-3 rounded-lg border border-[#d6d4ce] px-4 focus-within:border-[#a92d35]">
-                      <Icon name="lock" className="text-[#777873]" />
-                      <input
-                        type="password"
+                  <BoxReveal delay={0.44} full>
+                    <label className="block">
+                      <span className="mb-2 flex items-center justify-between text-sm font-semibold">
+                        Password
+                        {mode === "signin" && (
+                          <button
+                            type="button"
+                            className="cursor-pointer text-xs text-[#a92d35] hover:underline"
+                          >
+                            Forgot password?
+                          </button>
+                        )}
+                      </span>
+                      <SpotlightInput
+                        type={showPassword ? "text" : "password"}
                         required
                         minLength={8}
                         value={password}
                         onChange={(event) => setPassword(event.target.value)}
                         placeholder="At least 8 characters"
-                        className="h-full w-full bg-transparent text-sm outline-none"
+                        icon={<Icon name="lock" />}
+                        trailing={passwordToggle}
                       />
-                    </span>
-                  </label>
+                    </label>
+                  </BoxReveal>
                   {mode === "create" && (
-                    <label>
-                      <span className="mb-2 block text-sm font-semibold">
-                        Confirm password
-                      </span>
-                      <span className="flex h-13 items-center gap-3 rounded-lg border border-[#d6d4ce] px-4 focus-within:border-[#a92d35]">
-                        <Icon name="lock" className="text-[#777873]" />
-                        <input
-                          type="password"
+                    <BoxReveal delay={0.1} full>
+                      <label className="block">
+                        <span className="mb-2 block text-sm font-semibold">
+                          Confirm password
+                        </span>
+                        <SpotlightInput
+                          type={showPassword ? "text" : "password"}
                           required
                           minLength={8}
                           value={confirmPassword}
@@ -2163,33 +3020,38 @@ function AuthScreen({
                             setConfirmPassword(event.target.value)
                           }
                           placeholder="Re-enter password"
-                          className="h-full w-full bg-transparent text-sm outline-none"
+                          icon={<Icon name="lock" />}
                         />
-                      </span>
-                    </label>
+                      </label>
+                    </BoxReveal>
                   )}
                 </div>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="mt-6 h-14 w-full cursor-pointer rounded-lg bg-[#a92d35] text-sm font-semibold text-white transition hover:bg-[#8f252d]"
-                >
-                  {loading
-                    ? "Please wait..."
-                    : mode === "signin"
-                      ? `Sign in as ${accountRole}`
-                      : `Create ${accountRole} account`}
-                </button>
+
+                <BoxReveal delay={0.5} full className="mt-6">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="group/btn relative h-12 w-full cursor-pointer rounded-lg bg-[#a92d35] text-sm font-semibold text-white shadow-[0_1px_0_0_#ffffff40_inset,0_-1px_0_0_#00000030_inset] transition hover:bg-[#8f252d] disabled:cursor-wait disabled:opacity-70"
+                  >
+                    {loading
+                      ? "Please wait..."
+                      : mode === "signin"
+                        ? <>Sign in as {accountRole} &rarr;</>
+                        : <>Create {accountRole} account &rarr;</>}
+                    <BottomGradient />
+                  </button>
+                </BoxReveal>
               </>
             )}
           </form>
+
           {(formError || error) && (
-            <p className="mt-4 rounded bg-[#fbefef] p-3 text-sm text-[#8f252d]">
+            <p className="mt-4 rounded-md bg-[#fbefef] p-3 text-sm text-[#8f252d]">
               {formError || error}
             </p>
           )}
           {notice && (
-            <p className="mt-4 rounded bg-[#e8f1ea] p-3 text-sm text-[#347153]">
+            <p className="mt-4 rounded-md bg-[#e8f1ea] p-3 text-sm text-[#347153]">
               {notice}
             </p>
           )}
@@ -2203,6 +3065,31 @@ function AuthScreen({
     </main>
   )
 }
+
+// Stack icons are bundled in public/brand/stack (from the MIT-licensed devicon set).
+const devicon = (name: string) => `/brand/stack/${name}.svg`
+
+const orbitBadge = (src: string, alt: string) => (
+  <span className="grid size-full place-items-center rounded-full bg-white p-2 shadow-[0_6px_16px_rgba(23,26,24,0.12)]">
+    <img src={src} alt={alt} className="size-full object-contain" loading="lazy" />
+  </span>
+)
+
+// Orbiting icons around the UT seal: the UT "T" mark plus common capstone stacks.
+const authOrbitIcons: OrbitIcon[] = [
+  // inner ring
+  { key: "react", node: orbitBadge(devicon("react"), "React"), className: "size-10", radius: 140, duration: 22, delay: 0, path: true },
+  { key: "ts", node: orbitBadge(devicon("typescript"), "TypeScript"), className: "size-10", radius: 140, duration: 22, delay: 11, path: false },
+  // middle ring (reverse) with the UT "T" mark
+  { key: "ut-mark", node: <img src="/brand/ut-tampa-mark.png" alt="University of Tampa" className="size-full object-contain drop-shadow-[0_6px_10px_rgba(23,26,24,0.2)]" />, className: "h-16 w-20", radius: 205, duration: 30, delay: 0, reverse: true, path: true },
+  { key: "python", node: orbitBadge(devicon("python"), "Python"), className: "size-11", radius: 205, duration: 30, delay: 10, reverse: true, path: false },
+  { key: "postgres", node: orbitBadge(devicon("postgresql"), "PostgreSQL"), className: "size-11", radius: 205, duration: 30, delay: 20, reverse: true, path: false },
+  // outer ring
+  { key: "java", node: orbitBadge(devicon("java"), "Java"), className: "size-12", radius: 270, duration: 40, delay: 0, path: true },
+  { key: "github", node: orbitBadge(devicon("github"), "GitHub"), className: "size-12", radius: 270, duration: 40, delay: 10, path: false },
+  { key: "figma", node: orbitBadge(devicon("figma"), "Figma"), className: "size-12", radius: 270, duration: 40, delay: 20, path: false },
+  { key: "node", node: orbitBadge(devicon("nodejs"), "Node.js"), className: "size-12", radius: 270, duration: 40, delay: 30, path: false },
+]
 
 export default function App() {
   const [authenticated, setAuthenticated] = useState(false)
@@ -2226,16 +3113,54 @@ export default function App() {
   const [view, setView] = useState<View>("projects")
   const [submitOpen, setSubmitOpen] = useState(false)
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
+  const [tourOpen, setTourOpen] = useState(false)
+  // Onboarding progress, remembered per role on this browser so returning
+  // users don't see the tour or the Getting started checklist again.
+  // Keys: tour, explore, review, users, dismissed.
+  const [progress, setProgress] = useState<Record<string, boolean>>({})
+  const progressKey = `deimos.onboarding.v1.${role}`
+
+  const markStep = (step: string) => {
+    setProgress((current) => {
+      if (current[step]) return current
+      const next = { ...current, [step]: true }
+      try {
+        localStorage.setItem(progressKey, JSON.stringify(next))
+      } catch {
+        // Storage can be unavailable (private mode); progress lasts this session.
+      }
+      return next
+    })
+  }
+
+  useEffect(() => {
+    if (!authenticated) return
+    let saved: Record<string, boolean> = {}
+    try {
+      saved = JSON.parse(localStorage.getItem(progressKey) ?? "{}") ?? {}
+      // Carry over the older "tour seen" flag from the first version.
+      if (localStorage.getItem(`deimos.tour.v1.${role}`) === "done") {
+        saved.tour = true
+      }
+    } catch {
+      saved = {}
+    }
+    setProgress(saved)
+    if (!saved.tour) setTourOpen(true)
+  }, [authenticated, role])
+
+  useEffect(() => {
+    if (authenticated && view === "users") markStep("users")
+  }, [authenticated, view])
+
+  const closeTour = () => {
+    setTourOpen(false)
+    markStep("tour")
+  }
 
   const changeRole = (nextRole: Role) => {
     setRole(nextRole)
-    setView(
-      nextRole === "faculty"
-        ? "review"
-        : nextRole === "admin"
-          ? "users"
-          : "projects",
-    )
+    setView("projects")
   }
 
   const loadUserRole = async (userId: string) => {
@@ -2412,6 +3337,7 @@ export default function App() {
     projectId: string,
     decision: "approved" | "changes_requested",
   ) => {
+    markStep("review")
     if (!supabase) return
     await reviewProject(projectId, decision)
     const [queueRows, projectRows] = await Promise.all([
@@ -2420,6 +3346,154 @@ export default function App() {
     ])
     setReviewQueue(queueRows.map(toReviewItem))
     setArchiveProjects(projectRows.map(toProject))
+  }
+
+  const openProject = (project: Project) => {
+    setSelectedProject(project)
+    markStep("explore")
+  }
+
+  const signOut = () => {
+    setAuthenticated(false)
+    if (supabase) void supabase.auth.signOut()
+    setRole("student")
+    setView("projects")
+    setSubmitOpen(false)
+    setSelectedProject(null)
+    setTourOpen(false)
+  }
+
+  const renderHome = ({ trending, onPickTech, scrollToExplore }: HomeHelpers) => {
+    const tourStep: HomeStep = {
+      key: "tour",
+      label: "Take the Deimos tour",
+      done: !!progress.tour,
+      action: () => setTourOpen(true),
+    }
+    const exploreStep = (label: string): HomeStep => ({
+      key: "explore",
+      label,
+      done: !!progress.explore,
+      action: scrollToExplore,
+    })
+    const shared = {
+      trending,
+      onPickTech,
+      checklistHidden: !!progress.dismissed,
+      onDismissChecklist: () => markStep("dismissed"),
+    }
+    const pending = reviewQueue.filter(
+      (item) => item.status === "pending_review",
+    ).length
+
+    if (role === "faculty") {
+      return (
+        <RoleHome
+          {...shared}
+          eyebrow="Faculty workspace"
+          title={`${greetingNow()}, Professor.`}
+          subtitle={
+            pending
+              ? `${pending} student ${pending === 1 ? "submission is" : "submissions are"} waiting for your review.`
+              : "Your review queue is clear. Browse and curate the archive below."
+          }
+          primary={{ label: "Open review queue", icon: "inbox", onClick: () => setView("review") }}
+          secondary={{ label: "Curate archive", icon: "edit", onClick: scrollToExplore }}
+          side={
+            <FacultySideCard
+              items={reviewQueue}
+              onOpenQueue={() => setView("review")}
+            />
+          }
+          steps={[
+            tourStep,
+            {
+              key: "review",
+              label: "Review a submission",
+              done: !!progress.review,
+              action: () => setView("review"),
+            },
+            exploreStep("Open an archived project"),
+          ]}
+        />
+      )
+    }
+    if (role === "admin") {
+      return (
+        <RoleHome
+          {...shared}
+          eyebrow="Administration"
+          title={`${greetingNow()}, Admin.`}
+          subtitle={`Manage who can use Deimos and keep an eye on the ${archiveProjects.length} capstones in the archive.`}
+          primary={{ label: "Manage users", icon: "users", onClick: () => setView("users") }}
+          secondary={{ label: "Browse archive", icon: "search", onClick: scrollToExplore }}
+          side={
+            <AdminSideCard
+              onUsers={() => setView("users")}
+              onExplore={scrollToExplore}
+              onTour={() => setTourOpen(true)}
+            />
+          }
+          steps={[
+            tourStep,
+            {
+              key: "users",
+              label: "Open the access list",
+              done: !!progress.users,
+              action: () => setView("users"),
+            },
+            exploreStep("Open an archived project"),
+          ]}
+        />
+      )
+    }
+    if (role === "guest") {
+      const featured = [...archiveProjects].sort((a, b) => b.year - a.year)[0]
+      return (
+        <RoleHome
+          {...shared}
+          eyebrow="Guest access"
+          title="Welcome to Deimos."
+          subtitle={`You're browsing ${archiveProjects.length} approved University of Tampa capstones in read-only mode.`}
+          primary={{ label: "Browse archive", icon: "search", onClick: scrollToExplore }}
+          secondary={{ label: "Sign in with UT", icon: "user", onClick: signOut }}
+          side={
+            <GuestSideCard
+              project={featured}
+              onOpen={openProject}
+              onSignIn={signOut}
+            />
+          }
+          steps={[tourStep, exploreStep("Open a capstone project")]}
+        />
+      )
+    }
+    return (
+      <RoleHome
+        {...shared}
+        eyebrow="Student workspace"
+        title={`${greetingNow()}, Spartan.`}
+        subtitle={`Pick up where you left off, or get inspired by ${archiveProjects.length} approved capstones from past UT teams.`}
+        primary={{ label: "Submit project", icon: "plus", onClick: () => setSubmitOpen(true) }}
+        secondary={{ label: "Browse archive", icon: "search", onClick: scrollToExplore }}
+        side={
+          <StudentSideCard
+            submissions={mySubmissions}
+            onViewAll={() => setView("submissions")}
+          />
+        }
+        steps={[
+          tourStep,
+          exploreStep("Open a past capstone"),
+          {
+            key: "submit",
+            label: "Submit your project",
+            done: mySubmissions.length > 0 || !!progress.submit,
+            action: () => setSubmitOpen(true),
+          },
+        ]}
+      />
+    )
   }
 
   if (authLoading) {
@@ -2442,27 +3516,27 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f4f1ea] text-[#171a18]">
-      <Header
+    <div className="min-h-screen bg-[#f4f1ea] text-[#171a18] lg:pl-[76px]">
+      <AppSidebar
         role={role}
         view={view}
         onView={setView}
         onSubmit={() => setSubmitOpen(true)}
-        onSignOut={() => {
-          setAuthenticated(false)
-          if (supabase) void supabase.auth.signOut()
-          setRole("student")
-          setView("projects")
-          setSubmitOpen(false)
-          setSelectedProject(null)
-        }}
+        onTour={() => setTourOpen(true)}
+        reviewCount={reviewQueue.length}
+        actionCount={
+          mySubmissions.filter((item) => item.status === "Changes requested")
+            .length
+        }
+        onSignOut={signOut}
       />
       {view === "projects" && (
         <ProjectsView
           role={role}
           projects={archiveProjects}
           loadError={projectLoadError}
-          onOpen={(project) => setSelectedProject(project)}
+          onOpen={openProject}
+          home={(helpers) => renderHome(helpers)}
         />
       )}
       {view === "submissions" && role === "student" && (
@@ -2491,6 +3565,12 @@ export default function App() {
           onSubmit={handleProjectSubmit}
         />
       )}
+      <OnboardingDialog
+        open={tourOpen}
+        steps={tourStepsFor(role)}
+        onClose={closeTour}
+        finishLabel={role === "student" ? "Start exploring" : "Get started"}
+      />
       {selectedProject && (
         <ProjectModal
           faculty={role === "faculty"}
