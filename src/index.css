@@ -45,3 +45,165 @@ textarea:focus-visible {
     line-height: 1.08;
   }
 }
+
+/* ===== Animated sign-in (src/components/ui/animated-sign-in.tsx) ===== */
+
+.deimos-ripple {
+  transform: translate(-50%, -50%);
+  animation: deimos-ripple 3.4s ease infinite;
+}
+
+@keyframes deimos-ripple {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+}
+
+.deimos-orbit {
+  animation: deimos-orbit calc(var(--duration) * 1s) linear infinite;
+}
+
+@keyframes deimos-orbit {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg)
+      translateY(calc(var(--radius) * 1px)) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg)
+      translateY(calc(var(--radius) * 1px)) rotate(-360deg);
+  }
+}
+
+.deimos-reveal-content {
+  animation: deimos-reveal-content var(--reveal-duration) ease-out
+    calc(var(--reveal-delay) + 0.2s) both;
+}
+
+.deimos-reveal-box {
+  animation: deimos-reveal-box var(--reveal-duration) ease-in
+    var(--reveal-delay) both;
+}
+
+@keyframes deimos-reveal-content {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes deimos-reveal-box {
+  from {
+    left: 0;
+  }
+  to {
+    left: 100%;
+  }
+}
+
+.deimos-float {
+  animation: deimos-float 6s ease-in-out infinite;
+}
+
+@keyframes deimos-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+
+/* ===== Onboarding + dashboard (onboarding-dialog.tsx, onboarding-art.tsx) ===== */
+
+.deimos-fade-in {
+  animation: deimos-fade-in 0.2s ease-out both;
+}
+
+.deimos-zoom-in {
+  animation: deimos-zoom-in 0.25s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+
+.deimos-step-in {
+  animation: deimos-step-in 0.35s ease-out both;
+}
+
+.deimos-rise {
+  animation: deimos-rise 0.5s ease-out both;
+}
+
+.deimos-caret {
+  animation: deimos-caret 1s steps(1) infinite;
+}
+
+.deimos-grow {
+  animation: deimos-grow 1.2s ease-out 0.2s both;
+}
+
+.deimos-pulse {
+  animation: deimos-pulse 1.8s ease-out infinite;
+}
+
+@keyframes deimos-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes deimos-zoom-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes deimos-step-in {
+  from { opacity: 0; transform: translateX(10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes deimos-rise {
+  from { opacity: 0; translate: 0 14px; }
+  to { opacity: 1; translate: 0 0; }
+}
+
+@keyframes deimos-caret {
+  50% { opacity: 0; }
+}
+
+@keyframes deimos-grow {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+@keyframes deimos-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(224, 65, 76, 0.55); }
+  100% { box-shadow: 0 0 0 12px rgba(224, 65, 76, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .deimos-ripple,
+  .deimos-orbit,
+  .deimos-float {
+    animation-play-state: paused;
+  }
+  .deimos-reveal-content,
+  .deimos-fade-in,
+  .deimos-zoom-in,
+  .deimos-step-in,
+  .deimos-rise,
+  .deimos-grow,
+  .deimos-pulse,
+  .deimos-caret {
+    animation: none;
+  }
+  .deimos-reveal-box {
+    display: none;
+  }
+}
