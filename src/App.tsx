@@ -2848,7 +2848,6 @@ function AuthScreen({
                   type="button"
                   onClick={() => {
                     setMode("create")
-                    setAccountRole("student")
                   }}
                   className={`cursor-pointer rounded-md py-2.5 text-sm font-semibold transition ${
                     mode === "create"
@@ -2866,16 +2865,16 @@ function AuthScreen({
             <p className="text-sm font-semibold">
               {accountRole === "guest"
                 ? "Browse the archive as a..."
-                : `I am ${
-                    mode === "create" ? "creating an" : "signing in to an"
-                  }...`}
+                : mode === "create"
+                  ? "Create or set up an account as a..."
+                  : "I am signing in to an..."}
             </p>
           </BoxReveal>
           <BoxReveal delay={0.32} full className="mt-3">
             <div className="grid grid-cols-2 gap-2.5">
               {(
                 mode === "create"
-                  ? (["student"] as Role[])
+                  ? (["student", "faculty", "admin"] as Role[])
                   : (["student", "faculty", "admin", "guest"] as Role[])
               ).map((item) => {
                 const active = accountRole === item
@@ -2919,9 +2918,13 @@ function AuthScreen({
                         {item === "student"
                           ? "Submit & manage work"
                           : item === "faculty"
-                            ? "Review & approve"
+                            ? mode === "create"
+                              ? "Set up an invited account"
+                              : "Review & approve"
                             : item === "admin"
-                              ? "Manage access"
+                              ? mode === "create"
+                                ? "Set up an invited account"
+                                : "Manage access"
                               : "Browse read-only"}
                       </span>
                     </span>
@@ -2930,6 +2933,19 @@ function AuthScreen({
               })}
             </div>
           </BoxReveal>
+
+          {mode === "create" &&
+            (accountRole === "faculty" || accountRole === "admin") && (
+              <BoxReveal delay={0.36} full className="mt-4">
+                <p className="rounded-md border border-[#d9e4e2] bg-[#f1f7f5] p-3 text-xs leading-5 text-[#355f58]">
+                  Password setup only: this is not public staff registration.
+                  Continue only if a Deimos admin invited you by adding your
+                  email to the access list. The database checks that list when
+                  it creates the account. Use Sign in after setting your
+                  password.
+                </p>
+              </BoxReveal>
+            )}
 
           <form
             className="mt-6"
@@ -3037,7 +3053,9 @@ function AuthScreen({
                       ? "Please wait..."
                       : mode === "signin"
                         ? <>Sign in as {accountRole} &rarr;</>
-                        : <>Create {accountRole} account &rarr;</>}
+                        : accountRole === "student"
+                          ? <>Create student account &rarr;</>
+                          : <>Set password & create {accountRole} account &rarr;</>}
                     <BottomGradient />
                   </button>
                 </BoxReveal>
@@ -3277,13 +3295,6 @@ export default function App() {
       setAuthenticated(true)
       return
     }
-    if (mode === "create" && nextRole === "faculty") {
-      setAuthError(
-        "Faculty accounts must be created by an archive administrator. Choose Sign in if your account is already set up.",
-      )
-      return
-    }
-
     setAuthBusy(true)
     try {
       if (mode === "create") {
@@ -3295,7 +3306,7 @@ export default function App() {
         if (error) throw error
         if (!data.session) {
           setAuthNotice(
-            "Check your email to confirm your account, then sign in.",
+            "Account setup started. If email confirmation is enabled for this Supabase project, check your inbox to finish setup. Otherwise, sign in with the password you just created.",
           )
           return
         }

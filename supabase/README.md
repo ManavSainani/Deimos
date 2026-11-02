@@ -45,12 +45,18 @@ values (lower('admin@example.edu'), 'admin')
 on conflict (email) do update set role = excluded.role;
 ```
 
-If you already have an account with that email, sign in using the **Admin**
-card. Otherwise, create the account with that email; the database assigns it
-the admin role even though the account creation screen only offers student
-signup. Admins can then authorize student, faculty, and admin emails in the app.
-New accounts must use an authorized email; the database assigns the role chosen
-by the admin.
+If you already have an account with that email, sign in as **Admin**. Otherwise,
+choose **Create account**, select **Admin**, and set a password with that same
+email. The database creates the account only when the email is already in
+`authorized_users` and assigns the role stored there. Admins can then add or
+remove authorized student, faculty, and admin emails in the app. Faculty and
+admin password setup follows the same rule: an admin must add the email to the
+access list first. The app and database reject unlisted email addresses.
+
+Supabase's **Confirm email** setting controls whether new users must confirm
+their email after creating a password. It is a project-wide setting, not a
+faculty/admin-only setting. With confirmation enabled, users must confirm before
+they can sign in; disabling it applies to every role.
 
 ## Current backend behavior
 
