@@ -44,6 +44,7 @@ import {
 type Role = "student" | "faculty" | "admin" | "guest"
 type View =
   | "projects"
+  | "project-list"
   | "submissions"
   | "review"
   | "users"
@@ -254,6 +255,7 @@ function AppSidebar({
         : role === "admin"
           ? [
               { label: "Dashboard", value: "projects", icon: "home" },
+              { label: "Projects", value: "project-list", icon: "folder" },
               { label: "Authorized users", value: "users", icon: "users" },
               { label: "Archive", value: "archive", icon: "archive" },
               { label: "Profile", value: "profile", icon: "user" },
@@ -3527,6 +3529,14 @@ export default function App() {
           loadError={projectLoadError}
           onOpen={openProject}
           home={(helpers) => renderHome(helpers)}
+        />
+      )}
+      {view === "project-list" && role === "admin" && (
+        <ProjectsView
+          role={role}
+          projects={archiveProjects}
+          loadError={projectLoadError}
+          onOpen={openProject}
         />
       )}
       {view === "submissions" && role === "student" && (
