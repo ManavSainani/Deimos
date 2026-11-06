@@ -1,4 +1,5 @@
 import { FormEvent, ReactNode, useEffect, useMemo, useState } from "react"
+import pastProjects from "./data/past-projects.json"
 import {
   getApprovedProjects,
   getAuthorizedUsers,
@@ -68,7 +69,9 @@ type Project = {
   category: string
   term: string
   year: number
+  semesterLabel?: string
   description: string
+  teamName?: string
   team: string
   tags: string[]
   access: string
@@ -90,9 +93,11 @@ function toProject(row: ArchiveProjectRow): Project {
   return {
     id: row.id,
     title: row.title,
+    teamName: row.team_name || undefined,
     category: row.category,
     term: row.term,
     year: row.academic_year,
+    semesterLabel: row.semester_label || `${row.term} ${row.academic_year}`,
     description: row.description,
     team: row.team_members.join(", "),
     tags: row.technologies,
@@ -103,84 +108,21 @@ function toProject(row: ArchiveProjectRow): Project {
   }
 }
 
-const projects: Project[] = [
-  {
-    title: "HarborWatch: Tampa Bay Water Intelligence",
-    category: "AI / Machine Learning",
-    term: "Spring",
-    year: 2026,
-    description:
-      "A public dashboard combining buoy telemetry and predictive models to surface local water-quality risks for researchers and coastal communities.",
-    team: "Maya Patel, Jonah Reed, Elise Tran",
-    tags: ["Python", "React", "TensorFlow"],
-    access: "Public repository",
-  },
-  {
-    title: "Campus Compass",
-    category: "Mobile Application",
-    term: "Spring",
-    year: 2026,
-    description:
-      "An accessible mobile wayfinding companion that helps students navigate buildings, services, and live campus events.",
-    team: "Avery Collins, Nico Santos, Priya Shah",
-    tags: ["Swift", "MapKit", "Firebase"],
-    access: "Public repository",
-  },
-  {
-    title: "Sentinel Lab",
-    category: "Cybersecurity",
-    term: "Fall",
-    year: 2026,
-    description:
-      "An isolated cyber range for practicing incident response with guided scenarios, evidence capture, and faculty review.",
-    team: "Darius King, Leah Morgan",
-    tags: ["Go", "Docker", "Suricata"],
-    access: "University access",
-  },
-  {
-    title: "Spartan Studio Exchange",
-    category: "Web Application",
-    term: "Fall",
-    year: 2025,
-    description:
-      "A peer marketplace for creative students to share equipment, book studio time, and collaborate across disciplines.",
-    team: "Sofia Nguyen, Ethan Brooks, Amir Bell",
-    tags: ["TypeScript", "Next.js", "PostgreSQL"],
-    access: "Public repository",
-  },
-  {
-    title: "EmberSense",
-    category: "Hardware / Embedded Systems",
-    term: "Spring",
-    year: 2025,
-    description:
-      "A low-power sensor network and visualization toolkit for monitoring heat and humidity in campus maker spaces.",
-    team: "Riley Chen, Marcus Hill",
-    tags: ["C++", "ESP32", "Grafana"],
-    access: "Public repository",
-  },
-]
+const projects: Project[] = pastProjects.map((project) => ({
+  id: project.id,
+  title: project.title,
+  category: project.category,
+  term: project.term,
+  year: project.academicYear,
+  semesterLabel: project.semesterLabel,
+  description: project.summary,
+  teamName: project.teamName,
+  team: project.members.join(", "),
+  tags: [],
+  access: "Capstone archive",
+}))
 
-const submissions: SubmissionItem[] = [
-  {
-    title: "Library SeatSense",
-    updated: "Updated April 18, 2026",
-    status: "In review",
-    note: "Submitted for faculty review",
-  },
-  {
-    title: "Riverwalk AR Stories",
-    updated: "Updated April 12, 2026",
-    status: "Changes requested",
-    note: "Repository access needs to be updated",
-  },
-  {
-    title: "Tampa Transit Lens",
-    updated: "Approved March 28, 2026",
-    status: "Approved",
-    note: "Published to the 2026 archive",
-  },
-]
+const submissions: SubmissionItem[] = []
 
 function toSubmission(row: SubmissionRow): SubmissionItem {
   const status: Record<SubmissionRow["status"], SubmissionStatus> = {
@@ -207,32 +149,7 @@ function toSubmission(row: SubmissionRow): SubmissionItem {
   }
 }
 
-const reviewItems: ReviewItem[] = [
-  {
-    id: "demo-1",
-    student: "Maya Patel",
-    project: "Library SeatSense",
-    type: "Web Application",
-    submitted: "2 hours ago",
-    status: "pending_review",
-  },
-  {
-    id: "demo-2",
-    student: "Noah Williams",
-    project: "Bayshore Flood Mapper",
-    type: "Data Visualization",
-    submitted: "Yesterday",
-    status: "pending_review",
-  },
-  {
-    id: "demo-3",
-    student: "Isabella Garcia",
-    project: "Accessible UT",
-    type: "Mobile Application",
-    submitted: "April 17",
-    status: "pending_review",
-  },
-]
+const reviewItems: ReviewItem[] = []
 
 function toReviewItem(row: ReviewQueueRow): ReviewItem {
   return {
@@ -465,6 +382,12 @@ const initialsOf = (name: string) =>
     .join("")
     .toUpperCase()
 
+const academicYearLabel = (year: number) =>
+  `${year}-${year + 1}`
+
+const semesterLabelFor = (project: Project) =>
+  project.semesterLabel || `${project.term} ${project.year}`
+
 function ProjectCard({
   project,
   onOpen,
@@ -505,7 +428,7 @@ function ProjectCard({
           </div>
         )}
         <span className="absolute right-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-semibold text-[#343735] shadow-sm backdrop-blur">
-          {project.term} {project.year}
+          {academicYearLabel(project.year)}
         </span>
       </div>
 
@@ -518,6 +441,9 @@ function ProjectCard({
         <h3 className="mt-3 line-clamp-2 text-lg font-bold leading-snug tracking-tight">
           {project.title}
         </h3>
+        <p className="mt-1 text-xs font-medium text-[#777873]">
+          {semesterLabelFor(project)}
+        </p>
         <p className="mt-2 line-clamp-3 flex-1 text-sm leading-6 text-[#70716d]">
           {project.description}
         </p>
@@ -537,8 +463,11 @@ function ProjectCard({
               </span>
             ))}
           </div>
-          <span className="truncate text-xs text-[#5b5d59]">
-            {project.team}
+          <span className="min-w-0 text-xs text-[#5b5d59]">
+            <strong className="block truncate font-semibold text-[#343735]">
+              {project.teamName || "Project team"}
+            </strong>
+            <span className="block truncate">{project.team}</span>
           </span>
         </div>
 
@@ -555,8 +484,8 @@ function ProjectCard({
 
         <div className="mt-5 flex items-center justify-between border-t border-[#ebe8e1] pt-4">
           <span className="flex items-center gap-1.5 text-xs text-[#347153]">
-            <Icon name="github" size={15} />
-            {project.access}
+            <Icon name={project.repositoryUrl ? "github" : "archive"} size={15} />
+            {project.repositoryUrl ? project.access : "Capstone archive"}
           </span>
           <button
             onClick={onOpen}
@@ -1070,7 +999,7 @@ function GuestSideCard({
             </span>
           </div>
           <p className="mt-3 text-[11px] font-semibold text-[#71726e]">
-            {project.category} · {project.term} {project.year}
+            {academicYearLabel(project.year)} · {semesterLabelFor(project)}
           </p>
           <strong className="mt-1 text-base leading-snug">{project.title}</strong>
           <p className="mt-1 line-clamp-2 text-xs leading-5 text-[#71726e]">
@@ -1118,6 +1047,7 @@ function ProjectsView({
   const [query, setQuery] = useState("")
   const [category, setCategory] = useState("All")
   const [year, setYear] = useState("All years")
+  const [semester, setSemester] = useState("All semesters")
   const [tech, setTech] = useState("All technologies")
 
   const technologies = useMemo(
@@ -1144,6 +1074,14 @@ function ProjectsView({
       ),
     [archiveProjects],
   )
+  const semesters = useMemo(
+    () => [...new Set(archiveProjects.map(semesterLabelFor))],
+    [archiveProjects],
+  )
+  const teamCount = useMemo(
+    () => new Set(archiveProjects.map((project) => project.teamName).filter(Boolean)).size,
+    [archiveProjects],
+  )
   const categories = useMemo(() => {
     const counts = new Map<string, number>()
     archiveProjects.forEach((project) =>
@@ -1157,14 +1095,15 @@ function ProjectsView({
       archiveProjects.filter(
         (project) =>
           (!query ||
-            `${project.title} ${project.team} ${project.description} ${project.tags.join(" ")}`
+            `${project.title} ${project.teamName ?? ""} ${project.team} ${project.description} ${project.tags.join(" ")}`
               .toLowerCase()
               .includes(query.toLowerCase())) &&
           (category === "All" || project.category === category) &&
           (tech === "All technologies" || project.tags.includes(tech)) &&
+          (semester === "All semesters" || semesterLabelFor(project) === semester) &&
           (year === "All years" || String(project.year) === year),
       ),
-    [archiveProjects, query, category, tech, year],
+    [archiveProjects, query, category, tech, semester, year],
   )
 
   const years = [...new Set(filtered.map((project) => project.year))].sort(
@@ -1174,11 +1113,13 @@ function ProjectsView({
     query !== "" ||
     category !== "All" ||
     tech !== "All technologies" ||
+    semester !== "All semesters" ||
     year !== "All years"
   const clearFilters = () => {
     setQuery("")
     setCategory("All")
     setTech("All technologies")
+    setSemester("All semesters")
     setYear("All years")
   }
   const scrollToExplore = () =>
@@ -1201,7 +1142,7 @@ function ProjectsView({
         <PageHeader
           eyebrow="Capstone archive"
           title="Explore approved projects"
-          description="Discover teams, technologies, and ideas from across the University of Tampa."
+          description="Explore University of Tampa capstone teams and project summaries by academic year and semester."
         />
       )}
 
@@ -1213,26 +1154,26 @@ function ProjectsView({
           icon="folder"
         />
         <StatTile
-          label="Technologies"
-          value={technologies.length}
-          detail="Languages, frameworks & tools"
-          icon="chip"
+          label="Project teams"
+          value={teamCount}
+          detail="Named in the source archive"
+          icon="users"
         />
         <StatTile
           label="Academic years"
           value={allYears.length}
           detail={
             allYears.length
-              ? `${allYears[allYears.length - 1]} – ${allYears[0]}`
+              ? `${academicYearLabel(allYears[allYears.length - 1])} – ${academicYearLabel(allYears[0])}`
               : "No projects yet"
           }
           icon="clock"
         />
         <StatTile
-          label="Project types"
-          value={categories.length}
-          detail="From AI to embedded systems"
-          icon="grid"
+          label="Semester groups"
+          value={semesters.length}
+          detail="Semester groupings in the source"
+          icon="clock"
         />
       </div>
 
@@ -1274,16 +1215,29 @@ function ProjectsView({
             </label>
             <div className="grid grid-cols-2 gap-2 md:flex">
               <select
-                aria-label="Technology"
-                value={tech}
-                onChange={(event) => setTech(event.target.value)}
-                className="h-12 cursor-pointer rounded-xl border border-[#e2dfd8] bg-white px-3 text-sm md:w-48"
+                aria-label="Semester"
+                value={semester}
+                onChange={(event) => setSemester(event.target.value)}
+                className="h-12 cursor-pointer rounded-xl border border-[#e2dfd8] bg-white px-3 text-sm md:w-56"
               >
-                <option>All technologies</option>
-                {technologies.map((item) => (
+                <option>All semesters</option>
+                {semesters.map((item) => (
                   <option key={item}>{item}</option>
                 ))}
               </select>
+              {technologies.length > 0 && (
+                <select
+                  aria-label="Technology"
+                  value={tech}
+                  onChange={(event) => setTech(event.target.value)}
+                  className="h-12 cursor-pointer rounded-xl border border-[#e2dfd8] bg-white px-3 text-sm md:w-48"
+                >
+                  <option>All technologies</option>
+                  {technologies.map((item) => (
+                    <option key={item}>{item}</option>
+                  ))}
+                </select>
+              )}
               <select
                 aria-label="Academic year"
                 value={year}
@@ -1292,7 +1246,9 @@ function ProjectsView({
               >
                 <option>All years</option>
                 {allYears.map((item) => (
-                  <option key={item}>{item}</option>
+                  <option key={item} value={item}>
+                    {academicYearLabel(item)}
+                  </option>
                 ))}
               </select>
             </div>
@@ -1344,27 +1300,40 @@ function ProjectsView({
 
         {years.map((groupYear) => {
           const group = filtered.filter((project) => project.year === groupYear)
+          const semesterGroups = [...new Set(group.map(semesterLabelFor))]
           return (
             <section key={groupYear} className="mt-10">
               <div className="mb-5 flex items-center gap-3">
                 <h3 className="text-2xl font-semibold tracking-tight">
-                  {groupYear}
+                  {academicYearLabel(groupYear)}
                 </h3>
                 <span className="rounded-full bg-[#ebe8e1] px-2.5 py-0.5 text-xs font-semibold text-[#5b5d59]">
                   {group.length} {group.length === 1 ? "project" : "projects"}
                 </span>
                 <span className="h-px flex-1 bg-[#e2dfd8]" />
               </div>
-              <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-                {group.map((project) => (
-                  <ProjectCard
-                    faculty={role === "faculty"}
-                    key={project.id ?? project.title}
-                    project={project}
-                    onOpen={() => onOpen(project)}
-                  />
-                ))}
-              </div>
+              {semesterGroups.map((semesterGroup) => (
+                <div key={semesterGroup} className="mt-7">
+                  <div className="mb-4 flex items-center gap-3">
+                    <h4 className="text-sm font-semibold text-[#5b5d59]">
+                      {semesterGroup}
+                    </h4>
+                    <span className="h-px flex-1 bg-[#e2dfd8]" />
+                  </div>
+                  <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                    {group
+                      .filter((project) => semesterLabelFor(project) === semesterGroup)
+                      .map((project) => (
+                        <ProjectCard
+                          faculty={role === "faculty"}
+                          key={project.id ?? project.title}
+                          project={project}
+                          onOpen={() => onOpen(project)}
+                        />
+                      ))}
+                  </div>
+                </div>
+              ))}
             </section>
           )
         })}
@@ -2307,9 +2276,8 @@ function ProjectModal({
       <div className="p-7">
         <div className="flex flex-wrap gap-2">
           <Badge tone="blue">{project.category}</Badge>
-          <Badge>
-            {project.term} {project.year}
-          </Badge>
+          <Badge>{academicYearLabel(project.year)}</Badge>
+          <Badge>{semesterLabelFor(project)}</Badge>
         </div>
         {faculty ? (
           <div className="mt-6 grid gap-5">
@@ -2323,6 +2291,7 @@ function ProjectModal({
                 className="min-h-28 w-full rounded border border-[#d6d4ce] p-3 text-sm"
               />
             </label>
+            <Field label="Team name" defaultValue={project.teamName ?? ""} />
             <Field label="Team members" defaultValue={project.team} />
             <div className="flex justify-between border-t border-[#dfddd6] pt-6">
               <button className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-[#a92d35]">
@@ -2374,23 +2343,33 @@ function ProjectModal({
                 <span className="text-xs font-bold uppercase tracking-wide text-[#777873]">
                   Team
                 </span>
-                <p className="mt-2 text-sm">{project.team}</p>
+                <p className="mt-2 text-sm font-semibold">{project.teamName}</p>
+                <p className="mt-1 text-sm leading-6">{project.team}</p>
               </div>
-              <div>
-                <span className="text-xs font-bold uppercase tracking-wide text-[#777873]">
-                  Technology
-                </span>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {project.tags.map((tag) => (
-                    <Badge key={tag}>{tag}</Badge>
-                  ))}
+              {project.tags.length > 0 && (
+                <div>
+                  <span className="text-xs font-bold uppercase tracking-wide text-[#777873]">
+                    Technology
+                  </span>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {project.tags.map((tag) => (
+                      <Badge key={tag}>{tag}</Badge>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
-            <button className="mt-6 flex cursor-pointer items-center gap-2 text-sm font-semibold text-[#a92d35]">
-              <Icon name="github" /> Visit project repository{" "}
-              <Icon name="arrow" size={14} />
-            </button>
+            {project.repositoryUrl && (
+              <a
+                href={project.repositoryUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-6 flex cursor-pointer items-center gap-2 text-sm font-semibold text-[#a92d35]"
+              >
+                <Icon name="github" /> Visit project repository
+                <Icon name="arrow" size={14} />
+              </a>
+            )}
           </>
         )}
       </div>

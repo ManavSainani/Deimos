@@ -13,26 +13,29 @@ the email authorization list. Database policies enforce these permissions.
    and run it to add private media storage and its access policies.
 4. Create a third SQL Editor query, paste `migrations/202610260003_authorized_users.sql`,
    and run it to add admin accounts and the authorization list.
-5. In **Project Settings → API**, copy the Project URL and the publishable key.
+5. Create another SQL Editor query, paste `migrations/202611060001_pdf_archive_projects.sql`,
+   and run it to add the PDF's 18 projects to the approved archive, including
+   their team names and semester labels.
+6. In **Project Settings → API**, copy the Project URL and the publishable key.
    The publishable key is intended for a browser app; never use a `service_role`
    or secret key in this project.
-6. For local backend testing, copy `.env.example` to `.env.local` and set
+7. For local backend testing, copy `.env.example` to `.env.local` and set
    `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`. Omit or rename
    `.env.local` to use the local demo mode instead. Restart Vite after changing
    environment variables.
-7. In Supabase **Authentication → URL Configuration**, set the Site URL to the
+8. In Supabase **Authentication → URL Configuration**, set the Site URL to the
    deployed Pages URL and add the local development URL (normally
    `http://localhost:8443`) to the allowed redirect URLs.
-8. In Cloudflare Pages, add the same two `VITE_` variables under the project’s
+9. In Cloudflare Pages, add the same two `VITE_` variables under the project’s
    **Settings → Variables and Secrets** for production (and preview, if used),
    then redeploy. Vite embeds these values at build time.
 
 The repository’s `.nvmrc` selects Node.js 22 for local and Cloudflare builds.
 
-The app uses the existing sample content when Supabase environment variables
-are absent. Once configured, the project archive and student submissions use
-Supabase, and newly submitted projects enter `pending_review` until faculty
-approves them.
+The project archive's demo data comes from the 18 projects listed in
+`src/data/past-projects.json`. With Supabase configured, the archive reads the
+approved records seeded by the migration above, and newly submitted projects
+enter `pending_review` until faculty approves them.
 
 ## Set up the first admin account
 

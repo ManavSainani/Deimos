@@ -3,6 +3,8 @@ import { requireSupabase } from "./supabase"
 export type ArchiveProjectRow = {
   id: string
   title: string
+  team_name: string
+  semester_label: string | null
   category: string
   term: string
   academic_year: number
@@ -118,11 +120,12 @@ export async function getApprovedProjects() {
   const { data, error } = await client
     .from("projects")
     .select(
-      "id, title, category, term, academic_year, description, team_members, technologies, repository_url, repository_access, card_image_path, additional_media_paths",
+      "id, title, team_name, semester_label, category, term, academic_year, description, team_members, technologies, repository_url, repository_access, card_image_path, additional_media_paths",
     )
     .eq("status", "approved")
     .order("academic_year", { ascending: false })
     .order("created_at", { ascending: false })
+    .order("id", { ascending: true })
 
   if (error) throw error
   const rows = (data ?? []) as ArchiveProjectRow[]

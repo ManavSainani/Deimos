@@ -62,7 +62,7 @@ export function SubmitArt() {
         <p className="text-[11px] font-bold text-[#171a18]">Submit your capstone</p>
         <div className="mt-3 flex items-center gap-2 rounded-md border border-[#d9d7d0] px-2.5 py-2 text-[11px] text-[#5b5d59]">
           <Icon name="github" size={14} />
-          github.com/team-localhost/deimos
+          Repository link (optional)
           <Icon name="check" size={14} className="ml-auto text-[#347153]" />
         </div>
         <div className="mt-2 grid grid-cols-3 gap-2">
@@ -166,9 +166,9 @@ export function DiscoverArt() {
 
 export function ReviewArt() {
   const rows = [
-    { name: "Library SeatSense", who: "Maya P.", tone: "bg-[#f5edda] text-[#866420]", status: "New" },
-    { name: "Riverwalk AR", who: "Nico S.", tone: "bg-[#e9f0f4] text-[#355f72]", status: "Updated" },
-    { name: "Transit Lens", who: "Leah M.", tone: "bg-[#f5edda] text-[#866420]", status: "New" },
+    { name: "SpaceByte", who: "JACE", tone: "bg-[#f5edda] text-[#866420]", status: "New" },
+    { name: "OpenSpot", who: "OpenSpot", tone: "bg-[#e9f0f4] text-[#355f72]", status: "Updated" },
+    { name: "ShadeSync", who: "The Light Benders", tone: "bg-[#f5edda] text-[#866420]", status: "New" },
   ]
   return (
     <div className="relative grid size-full place-items-center overflow-hidden bg-[linear-gradient(135deg,#f4f1ea,#ece6db)]">
