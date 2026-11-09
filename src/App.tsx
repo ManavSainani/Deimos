@@ -109,6 +109,25 @@ function toProject(row: ArchiveProjectRow): Project {
   }
 }
 
+function describeError(error: unknown, fallback: string) {
+  if (typeof error === "string") return error
+  if (error && typeof error === "object") {
+    const details = error as {
+      message?: unknown
+      code?: unknown
+      details?: unknown
+      hint?: unknown
+    }
+    const message = typeof details.message === "string" ? details.message : ""
+    const code = typeof details.code === "string" ? ` (${details.code})` : ""
+    const extra = [details.details, details.hint]
+      .filter((value): value is string => typeof value === "string" && !!value)
+      .join(" ")
+    if (message) return `${message}${code}${extra ? `: ${extra}` : ""}`
+  }
+  return error instanceof Error ? error.message : fallback
+}
+
 const projects: Project[] = pastProjects.map((project) => ({
   id: project.id,
   title: project.title,
@@ -3299,9 +3318,7 @@ export default function App() {
       })
       .catch((error: unknown) => {
         if (!cancelled) {
-          setProjectLoadError(
-            error instanceof Error ? error.message : "Please try again later.",
-          )
+          setProjectLoadError(describeError(error, "Please try again later."))
         }
       })
     return () => {
