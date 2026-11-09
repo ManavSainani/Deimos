@@ -106,6 +106,18 @@ export async function addAuthorizedUser(
   if (error) throw error
 }
 
+export async function updateAuthorizedUserRole(
+  email: string,
+  role: AuthorizedUser["role"],
+) {
+  const client = requireSupabase()
+  const { error } = await client
+    .from("authorized_users")
+    .update({ role })
+    .eq("email", email.trim().toLowerCase())
+  if (error) throw error
+}
+
 export async function removeAuthorizedUser(email: string) {
   const client = requireSupabase()
   const { error } = await client

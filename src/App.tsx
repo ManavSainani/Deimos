@@ -9,6 +9,7 @@ import {
   reviewProject,
   addAuthorizedUser,
   removeAuthorizedUser,
+  updateAuthorizedUserRole,
   submitProject,
   type ArchiveProjectRow,
   type AuthorizedUser,
@@ -44,7 +45,6 @@ import {
 type Role = "student" | "faculty" | "admin" | "guest"
 type View =
   | "projects"
-  | "project-list"
   | "submissions"
   | "review"
   | "users"
@@ -255,7 +255,6 @@ function AppSidebar({
         : role === "admin"
           ? [
               { label: "Dashboard", value: "projects", icon: "home" },
-              { label: "Projects", value: "project-list", icon: "folder" },
               { label: "Authorized users", value: "users", icon: "users" },
               { label: "Archive", value: "archive", icon: "archive" },
               { label: "Profile", value: "profile", icon: "user" },
@@ -2407,6 +2406,7 @@ function AuthorizedUsersView({ demoMode }: { demoMode: boolean }) {
   const [loading, setLoading] = useState(!demoMode)
   const [saving, setSaving] = useState(false)
   const [pendingRemoval, setPendingRemoval] = useState("")
+  const [pendingRoleChange, setPendingRoleChange] = useState("")
   const [error, setError] = useState("")
   const [notice, setNotice] = useState("")
   const [search, setSearch] = useState("")
@@ -2498,6 +2498,38 @@ function AuthorizedUsersView({ demoMode }: { demoMode: boolean }) {
       )
     } finally {
       setPendingRemoval("")
+    }
+  }
+
+  const handleRoleChange = async (user: AuthorizedUser) => {
+    const role = user.role === "student" ? "faculty" : "student"
+    setPendingRoleChange(user.email)
+    setError("")
+    setNotice("")
+    try {
+      if (demoMode) {
+        setUsers((current) =>
+          current.map((item) =>
+            item.email === user.email ? { ...item, role } : item,
+          ),
+        )
+      } else {
+        await updateAuthorizedUserRole(user.email, role)
+        await refreshUsers()
+      }
+      setNotice(
+        demoMode
+          ? `Demo access changed to ${role}. This change only lasts for this session.`
+          : `${user.email} access changed to ${role}.`,
+      )
+    } catch (roleError) {
+      setError(
+        roleError instanceof Error
+          ? roleError.message
+          : "Could not update this user's access.",
+      )
+    } finally {
+      setPendingRoleChange("")
     }
   }
 
@@ -2670,10 +2702,24 @@ function AuthorizedUsersView({ demoMode }: { demoMode: boolean }) {
                     >
                       {user.role}
                     </span>
+                    {user.role !== "admin" && (
+                      <button
+                        type="button"
+                        onClick={() => void handleRoleChange(user)}
+                        disabled={pendingRoleChange === user.email || pendingRemoval === user.email}
+                        className="cursor-pointer rounded-xl border border-[#d7e2e8] px-3 py-2 text-xs font-semibold text-[#355f72] transition hover:bg-[#edf3f6] disabled:cursor-wait disabled:opacity-50"
+                      >
+                        {pendingRoleChange === user.email
+                          ? "Updating..."
+                          : user.role === "student"
+                            ? "Make faculty"
+                            : "Make student"}
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() => void handleRemove(user.email)}
-                      disabled={pendingRemoval === user.email || self}
+                      disabled={pendingRemoval === user.email || pendingRoleChange === user.email || self}
                       className="cursor-pointer rounded-xl border border-[#e8cfd0] px-3 py-2 text-xs font-semibold text-[#a92d35] transition hover:bg-[#fbefef] disabled:cursor-not-allowed disabled:opacity-40"
                     >
                       {self
@@ -3529,14 +3575,6 @@ export default function App() {
           loadError={projectLoadError}
           onOpen={openProject}
           home={(helpers) => renderHome(helpers)}
-        />
-      )}
-      {view === "project-list" && role === "admin" && (
-        <ProjectsView
-          role={role}
-          projects={archiveProjects}
-          loadError={projectLoadError}
-          onOpen={openProject}
         />
       )}
       {view === "submissions" && role === "student" && (
