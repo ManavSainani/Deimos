@@ -2778,7 +2778,7 @@ function AuthScreen({
     mode: "signin" | "create",
     email: string,
     password: string,
-    otpAction?: "send" | "verify" | "verify-account" | "resend-account",
+    otpAction?: "verify-account" | "resend-account",
     otpCode?: string,
     otpType?: "email" | "signup",
   ) => Promise<AuthContinueResult>
@@ -2792,7 +2792,6 @@ function AuthScreen({
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
-  const [otpSent, setOtpSent] = useState(false)
   const [accountCodeSent, setAccountCodeSent] = useState(false)
   const [accountOtpType, setAccountOtpType] = useState<"email" | "signup">("signup")
   const [otpCode, setOtpCode] = useState("")
@@ -2894,7 +2893,6 @@ function AuthScreen({
                   type="button"
                   onClick={() => {
                     setMode("signin")
-                    setOtpSent(false)
                     setAccountCodeSent(false)
                     setOtpCode("")
                   }}
@@ -2910,7 +2908,6 @@ function AuthScreen({
                   type="button"
                   onClick={() => {
                     setMode("create")
-                    setOtpSent(false)
                     setAccountCodeSent(false)
                     setOtpCode("")
                   }}
@@ -2949,7 +2946,6 @@ function AuthScreen({
                     type="button"
                     onClick={() => {
                       setAccountRole(item)
-                      setOtpSent(false)
                       setAccountCodeSent(false)
                       setOtpCode("")
                     }}
@@ -3011,8 +3007,8 @@ function AuthScreen({
                   Password setup only: this is not public staff registration.
                   Continue only if a Deimos admin invited you by adding your
                   email to the access list. The database checks that list when
-                  it creates the account. After setup, use email codes to sign
-                  in.
+                  it creates the account. After setup, sign in with your
+                  password.
                 </p>
               </BoxReveal>
             )}
@@ -3022,25 +3018,12 @@ function AuthScreen({
             onSubmit={(event) => {
               event.preventDefault()
               setFormError("")
-              if (mode === "create" && !accountCodeSent && password !== confirmPassword) {
+              if (
+                mode === "create" &&
+                !accountCodeSent &&
+                password !== confirmPassword
+              ) {
                 setFormError("Passwords do not match.")
-                return
-              }
-              if (mode === "signin") {
-                if (otpSent && !otpCode.trim()) {
-                  setFormError("Enter the one-time code from your email.")
-                  return
-                }
-                void onContinue(
-                  accountRole,
-                  mode,
-                  email,
-                  "",
-                  otpSent ? "verify" : "send",
-                  otpSent ? otpCode.trim() : undefined,
-                ).then((success) => {
-                  if (success.success && !otpSent) setOtpSent(true)
-                })
                 return
               }
               if (accountCodeSent) {
@@ -3091,7 +3074,6 @@ function AuthScreen({
                       value={email}
                       onChange={(event) => {
                         setEmail(event.target.value)
-                        setOtpSent(false)
                         setAccountCodeSent(false)
                         setOtpCode("")
                       }}
@@ -3105,75 +3087,63 @@ function AuthScreen({
                   </label>
                 </BoxReveal>
 
-                {mode === "signin" || accountCodeSent ? (
+                {accountCodeSent ? (
                   <div className="mt-4">
-                    {otpSent || accountCodeSent ? (
-                      <>
-                        {accountCodeSent && (
-                          <BoxReveal delay={0.4} full className="mb-4">
-                            <div
-                              role="status"
-                              className="rounded-lg border border-[#cfe0d8] bg-[#f1f7f5] p-4 text-sm leading-6 text-[#355f58]"
-                            >
-                              <strong className="block">Check your email</strong>
-                              We sent a verification code to {email}. Enter it
-                              below to verify your account and sign in.
-                            </div>
-                          </BoxReveal>
-                        )}
-                        <BoxReveal delay={0.44} full>
-                          <label className="block">
-                            <span className="mb-2 block text-sm font-semibold">
-                              {accountCodeSent
-                                ? "Email verification code"
-                                : "One-time email code"}
-                            </span>
-                            <SpotlightInput
-                              type="text"
-                              inputMode="numeric"
-                              autoComplete="one-time-code"
-                              autoFocus
-                              required
-                              value={otpCode}
-                              onChange={(event) => setOtpCode(event.target.value)}
-                              placeholder="Enter the code from your email"
-                              icon={<Icon name="lock" />}
-                            />
-                          </label>
-                        </BoxReveal>
-                        <button
-                          type="button"
-                          disabled={loading}
-                          onClick={() => {
-                            const resend = accountCodeSent
-                              ? onContinue(
-                                  accountRole,
-                                  "create",
-                                  email,
-                                  password,
-                                  "resend-account",
-                                  undefined,
-                                  accountOtpType,
-                                )
-                              : onContinue(accountRole, "signin", email, "", "send")
-                            void resend.then((result) => {
-                              if (result.success) setOtpCode("")
-                            })
-                          }}
-                          className="mt-3 cursor-pointer text-xs font-semibold text-[#a92d35] hover:underline disabled:opacity-60"
-                        >
-                          Resend code
-                        </button>
-                      </>
-                    ) : (
-                      <p className="rounded-md border border-[#dedbd4] bg-[#faf8f4] p-3 text-xs leading-5 text-[#6f716d]">
-                        We’ll email you a one-time code. Use Create account
-                        first if this is your first time signing in.
-                      </p>
-                    )}
+                    <BoxReveal delay={0.4} full className="mb-4">
+                      <div
+                        role="status"
+                        className="rounded-lg border border-[#cfe0d8] bg-[#f1f7f5] p-4 text-sm leading-6 text-[#355f58]"
+                      >
+                        <strong className="block">Check your email</strong>
+                        We sent a verification code to {email}. Enter it below
+                        to verify your account and sign in.
+                      </div>
+                    </BoxReveal>
+                    <BoxReveal delay={0.44} full>
+                      <label className="block">
+                        <span className="mb-2 block text-sm font-semibold">
+                          Email verification code
+                        </span>
+                        <SpotlightInput
+                          type="text"
+                          inputMode="numeric"
+                          autoComplete="one-time-code"
+                          autoFocus
+                          required
+                          value={otpCode}
+                          onChange={(event) => setOtpCode(event.target.value)}
+                          placeholder="Enter the code from your email"
+                          icon={<Icon name="lock" />}
+                        />
+                      </label>
+                    </BoxReveal>
+                    <button
+                      type="button"
+                      disabled={loading}
+                      onClick={() =>
+                        void onContinue(
+                          accountRole,
+                          "create",
+                          email,
+                          password,
+                          "resend-account",
+                          undefined,
+                          accountOtpType,
+                        ).then((result) => {
+                          if (result.success) setOtpCode("")
+                        })
+                      }
+                      className="mt-3 cursor-pointer text-xs font-semibold text-[#a92d35] hover:underline disabled:opacity-60"
+                    >
+                      Resend code
+                    </button>
                   </div>
                 ) : (
-                  <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                  <div
+                    className={`mt-4 grid gap-4 ${
+                      mode === "create" ? "sm:grid-cols-2" : ""
+                    }`}
+                  >
                     <BoxReveal delay={0.44} full>
                       <label className="block">
                         <span className="mb-2 block text-sm font-semibold">
@@ -3191,24 +3161,26 @@ function AuthScreen({
                         />
                       </label>
                     </BoxReveal>
-                    <BoxReveal delay={0.1} full>
-                      <label className="block">
-                        <span className="mb-2 block text-sm font-semibold">
-                          Confirm password
-                        </span>
-                        <SpotlightInput
-                          type={showPassword ? "text" : "password"}
-                          required
-                          minLength={8}
-                          value={confirmPassword}
-                          onChange={(event) =>
-                            setConfirmPassword(event.target.value)
-                          }
-                          placeholder="Re-enter password"
-                          icon={<Icon name="lock" />}
-                        />
-                      </label>
-                    </BoxReveal>
+                    {mode === "create" && (
+                      <BoxReveal delay={0.1} full>
+                        <label className="block">
+                          <span className="mb-2 block text-sm font-semibold">
+                            Confirm password
+                          </span>
+                          <SpotlightInput
+                            type={showPassword ? "text" : "password"}
+                            required
+                            minLength={8}
+                            value={confirmPassword}
+                            onChange={(event) =>
+                              setConfirmPassword(event.target.value)
+                            }
+                            placeholder="Re-enter password"
+                            icon={<Icon name="lock" />}
+                          />
+                        </label>
+                      </BoxReveal>
+                    )}
                   </div>
                 )}
 
@@ -3221,9 +3193,7 @@ function AuthScreen({
                     {loading
                       ? "Please wait..."
                       : mode === "signin"
-                        ? otpSent
-                          ? <>Verify code & sign in as {accountRole} &rarr;</>
-                          : <>Email me a sign-in code &rarr;</>
+                        ? <>Sign in as {accountRole} &rarr;</>
                         : accountCodeSent
                           ? <>Verify email & sign in &rarr;</>
                           : accountRole === "student"
@@ -3458,7 +3428,7 @@ export default function App() {
     mode: "signin" | "create",
     email: string,
     password: string,
-    otpAction?: "send" | "verify" | "verify-account" | "resend-account",
+    otpAction?: "verify-account" | "resend-account",
     otpCode?: string,
     otpType?: "email" | "signup",
   ): Promise<AuthContinueResult> => {
@@ -3530,22 +3500,9 @@ export default function App() {
           return { success: true, otpType: "signup" }
         }
       } else {
-        if (otpAction === "send") {
-          const { error } = await supabase.auth.signInWithOtp({
-            email: normalizedEmail,
-            options: { shouldCreateUser: false },
-          })
-          if (error) throw error
-          setAuthNotice("A one-time sign-in code has been sent to your email.")
-          return { success: true }
-        }
-        if (otpAction !== "verify" || !otpCode) {
-          throw new Error("Request a sign-in code before verifying it.")
-        }
-        const { error } = await supabase.auth.verifyOtp({
+        const { error } = await supabase.auth.signInWithPassword({
           email: normalizedEmail,
-          token: otpCode,
-          type: "email",
+          password,
         })
         if (error) throw error
       }
@@ -3561,11 +3518,7 @@ export default function App() {
       applyUserRole(actualRole)
       return { success: true }
     } catch (error) {
-      if (
-        mode === "create" ||
-        otpAction === "verify" ||
-        otpAction === "verify-account"
-      ) {
+      if (mode === "create" || otpAction === "verify-account") {
         await supabase.auth.signOut()
       }
       setAuthError(
