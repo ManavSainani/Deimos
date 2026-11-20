@@ -2430,6 +2430,7 @@ function AuthorizedUsersView({ demoMode }: { demoMode: boolean }) {
   const [saving, setSaving] = useState(false)
   const [pendingRemoval, setPendingRemoval] = useState("")
   const [pendingRoleChange, setPendingRoleChange] = useState("")
+  const [editingAccessEmail, setEditingAccessEmail] = useState("")
   const [error, setError] = useState("")
   const [notice, setNotice] = useState("")
   const [search, setSearch] = useState("")
@@ -2524,8 +2525,11 @@ function AuthorizedUsersView({ demoMode }: { demoMode: boolean }) {
     }
   }
 
-  const handleRoleChange = async (user: AuthorizedUser) => {
-    const role = user.role === "student" ? "faculty" : "student"
+  const handleRoleChange = async (
+    user: AuthorizedUser,
+    role: AuthorizedUser["role"],
+  ) => {
+    if (user.role === role) return
     setPendingRoleChange(user.email)
     setError("")
     setNotice("")
@@ -2702,55 +2706,104 @@ function AuthorizedUsersView({ demoMode }: { demoMode: boolean }) {
                 return (
                   <li
                     key={user.email}
-                    className="flex flex-wrap items-center gap-4 border-b border-[#f0eee8] px-5 py-4 last:border-0"
+                    className="border-b border-[#f0eee8] px-5 py-4 last:border-0"
                   >
-                    <span className="grid size-10 shrink-0 place-items-center rounded-full bg-[#ebe8e1] text-xs font-bold uppercase text-[#343735]">
-                      {user.email.slice(0, 2)}
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <strong className="block truncate text-sm">
-                        {user.email}
-                        {self && (
-                          <span className="ml-2 rounded-full bg-[#e8f1ea] px-2 py-0.5 text-[10px] font-semibold text-[#347153]">
-                            You
-                          </span>
-                        )}
-                      </strong>
-                      <span className="text-xs text-[#8a8b86]">
-                        Added {new Date(user.created_at).toLocaleDateString()}
+                    <div className="flex flex-wrap items-center gap-4">
+                      <span className="grid size-10 shrink-0 place-items-center rounded-full bg-[#ebe8e1] text-xs font-bold uppercase text-[#343735]">
+                        {user.email.slice(0, 2)}
                       </span>
-                    </span>
-                    <span
-                      className={`rounded-full px-2.5 py-1 text-[11px] font-semibold capitalize ${roleTone[user.role]}`}
-                    >
-                      {user.role}
-                    </span>
-                    {user.role !== "admin" && (
-                      <button
-                        type="button"
-                        onClick={() => void handleRoleChange(user)}
-                        disabled={pendingRoleChange === user.email || pendingRemoval === user.email}
-                        className="cursor-pointer rounded-xl border border-[#d7e2e8] px-3 py-2 text-xs font-semibold text-[#355f72] transition hover:bg-[#edf3f6] disabled:cursor-wait disabled:opacity-50"
+                      <span className="min-w-0 flex-1">
+                        <strong className="block truncate text-sm">
+                          {user.email}
+                          {self && (
+                            <span className="ml-2 rounded-full bg-[#e8f1ea] px-2 py-0.5 text-[10px] font-semibold text-[#347153]">
+                              You
+                            </span>
+                          )}
+                        </strong>
+                        <span className="text-xs text-[#8a8b86]">
+                          Added {new Date(user.created_at).toLocaleDateString()}
+                        </span>
+                      </span>
+                      <span
+                        className={`rounded-full px-2.5 py-1 text-[11px] font-semibold capitalize ${roleTone[user.role]}`}
                       >
-                        {pendingRoleChange === user.email
-                          ? "Updating..."
-                          : user.role === "student"
-                            ? "Make faculty"
-                            : "Make student"}
-                      </button>
+                        {user.role}
+                      </span>
+                      {self ? (
+                        <span className="rounded-xl border border-[#e2dfd8] px-3 py-2 text-xs font-semibold text-[#8a8b86]">
+                          Current account
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          aria-expanded={editingAccessEmail === user.email}
+                          onClick={() =>
+                            setEditingAccessEmail((current) =>
+                              current === user.email ? "" : user.email,
+                            )
+                          }
+                          disabled={
+                            pendingRoleChange === user.email ||
+                            pendingRemoval === user.email
+                          }
+                          className="cursor-pointer rounded-xl border border-[#d7e2e8] px-3 py-2 text-xs font-semibold text-[#355f72] transition hover:bg-[#edf3f6] disabled:cursor-wait disabled:opacity-50"
+                        >
+                          {pendingRoleChange === user.email
+                            ? "Updating..."
+                            : pendingRemoval === user.email
+                              ? "Removing..."
+                              : "Edit access"}
+                        </button>
+                      )}
+                    </div>
+                    {editingAccessEmail === user.email && !self && (
+                      <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-[#f0eee8] pt-4 pl-14">
+                        <span className="mr-1 text-xs font-medium text-[#71726e]">
+                          Change role:
+                        </span>
+                        {(["student", "faculty", "admin"] as const).map(
+                          (role) => (
+                            <button
+                              key={role}
+                              type="button"
+                              aria-pressed={user.role === role}
+                              disabled={
+                                user.role === role ||
+                                pendingRoleChange === user.email ||
+                                pendingRemoval === user.email
+                              }
+                              onClick={() => {
+                                setEditingAccessEmail("")
+                                void handleRoleChange(user, role)
+                              }}
+                              className={`cursor-pointer rounded-lg border px-3 py-2 text-xs font-semibold capitalize transition disabled:cursor-default disabled:opacity-50 ${
+                                user.role === role
+                                  ? "border-[#d7e2e8] bg-[#edf3f6] text-[#355f72]"
+                                  : "border-[#e2dfd8] text-[#5b5d59] hover:bg-[#f4f1ea]"
+                              }`}
+                            >
+                              {role}
+                              {user.role === role ? " (current)" : ""}
+                            </button>
+                          ),
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingAccessEmail("")
+                            void handleRemove(user.email)
+                          }}
+                          disabled={
+                            pendingRemoval === user.email ||
+                            pendingRoleChange === user.email
+                          }
+                          className="cursor-pointer rounded-lg border border-[#e8cfd0] px-3 py-2 text-xs font-semibold text-[#a92d35] transition hover:bg-[#fbefef] disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                          Remove
+                        </button>
+                      </div>
                     )}
-                    <button
-                      type="button"
-                      onClick={() => void handleRemove(user.email)}
-                      disabled={pendingRemoval === user.email || pendingRoleChange === user.email || self}
-                      className="cursor-pointer rounded-xl border border-[#e8cfd0] px-3 py-2 text-xs font-semibold text-[#a92d35] transition hover:bg-[#fbefef] disabled:cursor-not-allowed disabled:opacity-40"
-                    >
-                      {self
-                        ? "Current account"
-                        : pendingRemoval === user.email
-                          ? "Removing..."
-                          : "Remove access"}
-                    </button>
                   </li>
                 )
               })}
