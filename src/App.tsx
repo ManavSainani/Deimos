@@ -144,6 +144,23 @@ const projects: Project[] = pastProjects.map((project) => ({
   team: project.members.join(", "),
   tags: [],
   access: "Capstone archive",
+  repositoryUrl: ({
+    SpaceByte: "https://github.com/christamaries/SpaceByte",
+    SociaLyfe: "https://github.com/Acspartan/CSC-401-JEKAM",
+    Deimos: "https://github.com/ManavSainani/Deimos",
+    "Lung CT Computer Vision": "https://github.com/Python-Volod/senior-capstone.git",
+    AllTheOdds: "https://github.com/FishGoBoom35/Senior-Capstone-AI-Gambling-Website",
+    OpenSpot: "https://github.com/imranali17689/Sensors",
+    "Campus Eats": "https://github.com/Jvnbell/CampusEaters",
+    "Glide+": "https://github.com/JoeyDiMart/glide-capstone",
+    "Smart Lab Check-In": "https://github.com/MSL-IV/CSC401-Senior-Capstone",
+    "Everywhere Anytime Ready for Loading (E.A.R.L.) Bot": "https://github.com/Horizon489732/E.A.R.L._Bot",
+    "Smart Pantry – AI Food Waste Reducer": "https://github.com/Cmcfall04/CSC-401-senior-capstone-project",
+    "3D LiDAR Mapping": "https://github.com/swisherrr/3D-lidar-mapping",
+    ShadeSync: "https://github.com/brianquintero13/Senior-Capstone",
+    Attendify: "https://github.com/NathanielGonzalez/Senior-Capstone-I",
+    SkySeeker: "https://github.com/nziswat/SkySeeker",
+  } as Record<string, string>)[project.title],
 }))
 
 const submissions: SubmissionItem[] = []
@@ -2390,7 +2407,8 @@ function ProjectModal({
                 rel="noreferrer"
                 className="mt-6 flex cursor-pointer items-center gap-2 text-sm font-semibold text-[#a92d35]"
               >
-                <Icon name="github" /> Visit project repository
+                <Icon name="github" />
+                <span className="underline underline-offset-4">View this project in GitHub</span>
                 <Icon name="arrow" size={14} />
               </a>
             )}
