@@ -94,6 +94,24 @@ type ReviewItem = {
   status: "pending_review" | "changes_requested"
 }
 
+const repositoryLinks: Record<string, string> = {
+  SpaceByte: "https://github.com/christamaries/SpaceByte",
+  SociaLyfe: "https://github.com/Acspartan/CSC-401-JEKAM",
+  Deimos: "https://github.com/ManavSainani/Deimos",
+  "Lung CT Computer Vision": "https://github.com/Python-Volod/senior-capstone.git",
+  AllTheOdds: "https://github.com/FishGoBoom35/Senior-Capstone-AI-Gambling-Website",
+  OpenSpot: "https://github.com/imranali17689/Sensors",
+  "Campus Eats": "https://github.com/Jvnbell/CampusEaters",
+  "Glide+": "https://github.com/JoeyDiMart/glide-capstone",
+  "Smart Lab Check-In": "https://github.com/MSL-IV/CSC401-Senior-Capstone",
+  "Everywhere Anytime Ready for Loading (E.A.R.L.) Bot": "https://github.com/Horizon489732/E.A.R.L._Bot",
+  "Smart Pantry – AI Food Waste Reducer": "https://github.com/Cmcfall04/CSC-401-senior-capstone-project",
+  "3D LiDAR Mapping": "https://github.com/swisherrr/3D-lidar-mapping",
+  ShadeSync: "https://github.com/brianquintero13/Senior-Capstone",
+  Attendify: "https://github.com/NathanielGonzalez/Senior-Capstone-I",
+  SkySeeker: "https://github.com/nziswat/SkySeeker",
+}
+
 function toProject(row: ArchiveProjectRow): Project {
   return {
     id: row.id,
@@ -107,7 +125,7 @@ function toProject(row: ArchiveProjectRow): Project {
     team: row.team_members.join(", "),
     tags: row.technologies,
     access: row.repository_access,
-    repositoryUrl: row.repository_url,
+    repositoryUrl: repositoryLinks[row.title] || row.repository_url || null,
     cardImageUrl: row.card_image_url,
     additionalMedia: row.additional_media ?? [],
   }
@@ -144,23 +162,7 @@ const projects: Project[] = pastProjects.map((project) => ({
   team: project.members.join(", "),
   tags: [],
   access: "Capstone archive",
-  repositoryUrl: ({
-    SpaceByte: "https://github.com/christamaries/SpaceByte",
-    SociaLyfe: "https://github.com/Acspartan/CSC-401-JEKAM",
-    Deimos: "https://github.com/ManavSainani/Deimos",
-    "Lung CT Computer Vision": "https://github.com/Python-Volod/senior-capstone.git",
-    AllTheOdds: "https://github.com/FishGoBoom35/Senior-Capstone-AI-Gambling-Website",
-    OpenSpot: "https://github.com/imranali17689/Sensors",
-    "Campus Eats": "https://github.com/Jvnbell/CampusEaters",
-    "Glide+": "https://github.com/JoeyDiMart/glide-capstone",
-    "Smart Lab Check-In": "https://github.com/MSL-IV/CSC401-Senior-Capstone",
-    "Everywhere Anytime Ready for Loading (E.A.R.L.) Bot": "https://github.com/Horizon489732/E.A.R.L._Bot",
-    "Smart Pantry – AI Food Waste Reducer": "https://github.com/Cmcfall04/CSC-401-senior-capstone-project",
-    "3D LiDAR Mapping": "https://github.com/swisherrr/3D-lidar-mapping",
-    ShadeSync: "https://github.com/brianquintero13/Senior-Capstone",
-    Attendify: "https://github.com/NathanielGonzalez/Senior-Capstone-I",
-    SkySeeker: "https://github.com/nziswat/SkySeeker",
-  } as Record<string, string>)[project.title],
+  repositoryUrl: repositoryLinks[project.title],
 }))
 
 const submissions: SubmissionItem[] = []
@@ -2408,8 +2410,7 @@ function ProjectModal({
                 className="mt-6 flex cursor-pointer items-center gap-2 text-sm font-semibold text-[#a92d35]"
               >
                 <Icon name="github" />
-                <span className="underline underline-offset-4">View this project in GitHub</span>
-                <Icon name="arrow" size={14} />
+                <span className="underline underline-offset-4">view this project on github -&gt;</span>
               </a>
             )}
           </>
